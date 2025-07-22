@@ -25,9 +25,9 @@ void checkParty(char* connection)
         for (int j = 0; j < SIZE; j++) {
             if (lan[a][b][i][j] && lan[c][d][i][j]) {
 
-                tcount += (a + 'a') == 't' || (b + 'a') == 't' ||
-                          (c + 'a') == 't' || (d + 'a') == 't' ||
-                          (i + 'a') == 't' || (j + 'a') == 't';
+                tcount += (a + 'a') == 't' || // (b + 'a') == 't' ||
+                          (c + 'a') == 't' || // (d + 'a') == 't' ||
+                          (i + 'a') == 't'; // (j + 'a') == 't';
 
                 printf("%s%c%c\n",connection,i+'a',j+'a');
             }
