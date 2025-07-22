@@ -12,30 +12,35 @@ size_t tcount = 0;
 void checkParty(char* connection)
 {
 
+
     // printf("%s\n", connection);
     int a = connection[0] - 'a';
     int b = connection[1] - 'a';
     int c = connection[2] - 'a';
     int d = connection[3] - 'a';
 
+    if (lan[a][b][c][d]) return;
+
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            if (!lan[a][b][c][d] && !lan[c][d][a][b] &&
-                 lan[a][b][i][j] && lan[c][d][i][j]) {
+            if (lan[a][b][i][j] && lan[c][d][i][j]) {
 
-                hast = (a + 'a') == 't' || (b + 'a') == 't' ||
-                       (c + 'a') == 't' || (d + 'a') == 't' ||
-                       (i + 'a') == 't' || (j + 'a') == 't';
+                tcount += (a + 'a') == 't' || (b + 'a') == 't' ||
+                          (c + 'a') == 't' || (d + 'a') == 't' ||
+                          (i + 'a') == 't' || (j + 'a') == 't';
 
-                // if (hast) printf("%s%c%c\n",connection,i+'a',j+'a');
-                tcount += hast;
+                printf("%s%c%c\n",connection,i+'a',j+'a');
             }
             
         }
     }
 
-    lan[a][b][c][d] = !lan[a][b][c][d];
+    lan[a][b][c][d] = 1;
+    lan[c][d][a][b] = 1;
 }
+
+
+
 
 int main(void)
 {
@@ -51,6 +56,7 @@ int main(void)
     char l = 0;
 
     FILE* f = fopen("input.txt", "r");
+    // FILE* f = fopen("example.txt", "r");
 
     while ((l = getc(f)) != EOF) {
         // printf("%c", l);
