@@ -5,16 +5,26 @@ import java.io.IOException;
 class Main {
     public void mySol(int[] moves) {
         int actual = 50;
-        int zeros = 0;
+        int zeroes = 0;
 
         for (int i = 0; i < moves.length; i++) {
             int move = moves[i];
-            zeros += move/100 + Math.abs
-            actual = (actual + move) % 100;
-            System.out.printf("%d\n", actual);
+
+            if (move < 0 && actual != 0)
+                zeroes += (100 - actual - move)/100;
+            else
+                zeroes += (actual + Math.abs(move))/100;
+
+            actual = mod(actual + move, 100);
+
+            System.out.printf("%d\t%d\t%d\n", move, zeroes, actual);
         }
 
-        System.out.printf(":: count %d zeros ::\n", zeros);
+        System.out.printf(":: count %d zeroes ::\n", zeroes);
+    }
+
+    static int mod(int a, int n){    
+        return a<0 ? (a%n + n)%n : a%n;
     }
 
     public int[] parseElfString(String a) {
@@ -36,8 +46,8 @@ class Main {
         int[] c = test.parseElfString(a);
         test.mySol(c);
 
-        // String input = Files.readString(Path.of("2025/1/2/input.txt"));
-        // int[] d = test.parseElfString(input);
-        // test.mySol(d);
+        String input = Files.readString(Path.of("2025/1/2/input.txt"));
+        int[] d = test.parseElfString(input);
+        test.mySol(d);
     }
 }
