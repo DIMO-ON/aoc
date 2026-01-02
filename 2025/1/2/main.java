@@ -10,10 +10,10 @@ class Main {
         for (int i = 0; i < moves.length; i++) {
             int move = moves[i];
 
-            if (move < 0 && actual != 0)
-                zeroes += (100 - actual - move)/100;
+            if (move < 0)
+                zeroes += (mod(-actual, 100) + Math.abs(move)) / 100;
             else
-                zeroes += (actual + Math.abs(move))/100;
+                zeroes += (actual + Math.abs(move)) / 100;
 
             actual = mod(actual + move, 100);
 
@@ -24,7 +24,7 @@ class Main {
     }
 
     static int mod(int a, int n){    
-        return a<0 ? (a%n + n)%n : a%n;
+        return a - n * Math.floorDiv(a, n);
     }
 
     public int[] parseElfString(String a) {
