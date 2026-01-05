@@ -4,29 +4,46 @@ import java.io.IOException;
 
 class Main {
     public void mySol(String[] ranges) {
-        Long res = 0;
+        Long res = 0L;
+        int totCount = 0;
         for (int i = 0; i < ranges.length; i += 2) {
             ranges[i  ] = ranges[i  ].replaceAll("^[0]*", "").trim();
             ranges[i+1] = ranges[i+1].replaceAll("^[0]*", "").trim();
-            Long start = Long.parseLong(ranges[i  ]);
-            Long end   = Long.parseLong(ranges[i+1]);
+            Long start  = Long.parseLong(ranges[i  ]);
+            Long end    = Long.parseLong(ranges[i+1]);
+            int count   = 0;
             
             while (start <= end) {
-                res += this.checkId(start);
                 int idlen = this.idLen(start);
-                if (!idlen % 2) start += 1;
+                if (idlen % 2 == 0) {
+                    Long check = this.checkId(start);
+                    
+                    if (this.checkId(start).compareTo(0L) > 0) {
+                        res   += check;
+                        count += 1;
+                        System.out.println(start);
+                    }
+
+                    start += 1;
+                } else {
+                    start = (long) Math.pow(10, idlen + 1);
+                }
             }
 
-            System.out.printf("%s-%s\n", ranges[i], ranges[i + 1]);
+            totCount += count;
+
+            System.out.printf("%s-%s: %d\n", ranges[i], ranges[i + 1], count);
         }
+
+        System.out.printf("::: sum of nonIds is %d summing %d longs :::\n", res, totCount);
     }
 
-    int idLen(static Long code) {
+    int idLen(Long code) {
         String id = code.toString();
         return id.length();
     }
 
-    Long checkId(static Long code) {
+    Long checkId(Long code) {
         String id = code.toString();
         int len = id.length();
         String l = id.substring(0, len/2);
@@ -35,7 +52,7 @@ class Main {
         if (l.compareTo(r) == 0)
             return code;
         else
-            return 0;
+            return 0L;
     }
 
 
@@ -51,8 +68,8 @@ class Main {
         String[] c = test.parseElfString(a);
         test.mySol(c);
 
-        // String input = Files.readString(Path.of("2025/1/1/input.txt"));
-        // int[] d = test.parseElfString(input);
-        // test.mySol(d);
+        String input = Files.readString(Path.of("2025/2/1/input.txt"));
+        String[] d = test.parseElfString(input);
+        test.mySol(d);
     }
 }
