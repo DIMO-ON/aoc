@@ -15,18 +15,19 @@ class Main {
             
             while (start <= end) {
                 int idlen = this.idLen(start);
-                if (idlen % 2 == 0) {
+                if ((idlen % 2) == 0) {
                     Long check = this.checkId(start);
                     
-                    if (this.checkId(start).compareTo(0L) > 0) {
+                    if (check.compareTo(0L) > 0) {
                         res   += check;
                         count += 1;
-                        System.out.println(start);
+                        // System.out.println(start);
                     }
-
                     start += 1;
-                } else {
-                    start = (long) Math.pow(10, idlen + 1);
+
+                }
+                else {
+                    start = (long) Math.pow(10, idlen);
                 }
             }
 
