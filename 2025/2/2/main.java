@@ -13,7 +13,7 @@ class Main {
             Long end    = Long.parseLong(ranges[i+1]);
             int count   = 0;
             
-            for (; start < end; start++) {
+            for (; start <= end; start++) {
                 if (this.checkId(start.toString())) {
                     System.out.println(start);
                     res   += start;
@@ -30,17 +30,11 @@ class Main {
     }
 
     boolean checkId(String id) {
-        char a = '\0';
-        for (int i = 1; i <= id.length(); i++) {
-            for (int j = 0; j < id.length()/i; j++) {
-                a = id.charAt(j);
-                for (int z = 0; z < j; z++) {
-                    if (id.charAt(j+z*i) == a) return false;
-                }
-            }
+        for (int i = 1; i < id.length(); i++) {
+            String check = id.substring(0, i);
+            if (id.replaceAll(check, "").length() == 0) return true;
         }
-
-        return true;
+        return false;
     }
 
 
