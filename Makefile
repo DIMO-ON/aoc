@@ -1,6 +1,6 @@
 year ?= 2025
 day ?= 2
-part ?= 1
+part ?= 2
 
 $(day):
 	javac -g -d $(year)/$(day)/$(part)/target/classes -Xlint:unchecked $(year)/$(day)/$(part)/Main.java

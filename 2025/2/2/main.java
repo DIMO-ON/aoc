@@ -1,0 +1,63 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.io.IOException;
+
+class Main {
+    public void mySol(String[] ranges) {
+        Long res = 0L;
+        int totCount = 0;
+        for (int i = 0; i < ranges.length; i += 2) {
+            ranges[i  ] = ranges[i  ].replaceAll("^[0]*", "").trim();
+            ranges[i+1] = ranges[i+1].replaceAll("^[0]*", "").trim();
+            Long start  = Long.parseLong(ranges[i  ]);
+            Long end    = Long.parseLong(ranges[i+1]);
+            int count   = 0;
+            
+            for (; start < end; start++) {
+                if (this.checkId(start.toString())) {
+                    System.out.println(start);
+                    res   += start;
+                    count += 1;
+                }
+            }
+
+            totCount += count;
+
+            System.out.printf("%s-%s: %d\n", ranges[i], ranges[i + 1], count);
+        }
+
+        System.out.printf("::: sum of nonIds is %d summing %d longs :::\n", res, totCount);
+    }
+
+    boolean checkId(String id) {
+        char a = '\0';
+        for (int i = 1; i <= id.length(); i++) {
+            for (int j = 0; j < id.length()/i; j++) {
+                a = id.charAt(j);
+                for (int z = 0; z < j; z++) {
+                    if (id.charAt(j+z*i) == a) return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    public String[] parseElfString(String a) {
+        String b[] = a.replaceAll("-", ",").split(",");
+        return b;
+    }
+    
+    public static void main(String[] args) throws IOException {
+        String a = "011-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
+
+        Main test = new Main();
+        String[] c = test.parseElfString(a);
+        test.mySol(c);
+
+        String input = Files.readString(Path.of("2025/2/1/input.txt"));
+        String[] d = test.parseElfString(input);
+        test.mySol(d);
+    }
+}
