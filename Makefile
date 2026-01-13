@@ -1,5 +1,5 @@
 year ?= 2025
-day ?= 2
+day ?= 3
 part ?= 1
 
 $(day):
