@@ -6,6 +6,9 @@
  * 89 8 stava a destra di 9: cerco il massimo da 2 posizioni contemporanee (destr/sinistra del primo massimo trovato)
  */
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.io.IOException;
 
 class Main {
     private String[] input;
@@ -31,29 +34,36 @@ class Main {
     }
 
     public int largestValue(String a) {
+        // find max value
         int exclude = 0;
         for (int i = 0; i < a.length(); i++)
             if (a.charAt(exclude) < a.charAt(i)) exclude = i;
 
         // System.out.println(a.charAt(exclude));
         
-        int maxi = (exclude + 3) % a.length();
-        for (int i = 0; i < a.length(); i++)
-            if (i != exclude && a.charAt(maxi) < a.charAt(i))
-                maxi = i;
-
-        // System.out.println(a.charAt(maxi));
-        // System.exit(0);
-
-        if (maxi < exclude) {
-            return (int) (a.charAt(maxi) - 48) * 10 + (int) (a.charAt(exclude) - 48);
+        // find the biggest 2 digits value
+        int max = 0;
+        for (int i = 0; i < a.length(); i++) {
+            int actual = this.twodigitdecimal(a, exclude, i);
+            if (i != exclude && actual > max)
+                max = actual;
         }
 
-        return (int) (a.charAt(exclude) - 48) * 10 + (int) (a.charAt(maxi) - 48);
+        // System.exit(0);
+        return max;
+
+    }
+
+    public int twodigitdecimal(String a, int i, int j) {
+        if (i < j) {
+            return (int) (a.charAt(i) - 48) * 10 + (int) (a.charAt(j) - 48);
+        }
+
+        return (int) (a.charAt(j) - 48) * 10 + (int) (a.charAt(i) - 48);
     }
     
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Main ex = new Main("""
                 987654321111111
                 811111111111119
@@ -62,7 +72,7 @@ class Main {
 
         ex.mySol();
 
-        // Main input = new Main(Files.readString(Path.of("2025/2/1/input.txt"));
-        // input.mySol();
+        Main input = new Main(Files.readString(Path.of("2025/3/1/input.txt")));
+        input.mySol();
     }
 }
