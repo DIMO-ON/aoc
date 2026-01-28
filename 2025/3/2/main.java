@@ -3,6 +3,7 @@
  * 987654321111111 -> [987654321111] 111 
  *
  * trasformo la stringa in numero e tolgo tutte le combinazioni da 3 cifre finche non trovo il valore maggiore
+ * oppure provo tutte le combinazioni da 12 cifre dato che il puzzle input contiene codici da 100 cifre
  *
  */
 
@@ -35,24 +36,25 @@ class Main {
 
     public Long largestValue(String a) {
         Long max = 0l;
-        for (int first = 0; first < a.length(); first++) {
-            for (int second = first + 1; second < a.length(); second++) {
-                for (int third = second + 1; third < a.length(); third++) {
-                    Long actual = this.exclude(a, first, second, third);
-                    if (actual > max) max = actual; 
-                }
+
+        int[] combo = {0,1,2,3,4,5,6,7,8,9,10,11};
+
+        for (int i = combo.length - 1; i >= 0; i--) {
+            for (; i + 1 < combo.length && combo[i] < combo[i + 1] || combo[i] < a.length(); combo[i]++) {
+                Long actual = this.combineLong(a, combo);
+                if (actual > max) max = actual; 
             }
+            combo[i] = combo[i - 1] + 2;
         }
 
         // System.exit(0);
         return max;
     }
 
-    public Long exclude(String a, int first, int second, int third) {
+    public Long combineLong(String a, int[] idx) {
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < a.length(); i++)
-            if (i != first && i != second && i != third)
-                b.append(a.charAt(i));
+        for (int i = 0; i < idx.length; i++)
+            b.append(a.charAt(idx[i]));
 
         // System.exit(0);
         return Long.parseLong(b.toString());
