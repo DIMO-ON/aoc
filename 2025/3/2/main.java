@@ -1,12 +1,3 @@
-/*
- * togliere i miniori per formare il numero piu' grande da 12 cifre
- * 987654321111111 -> [987654321111] 111 
- *
- * trasformo la stringa in numero e tolgo tutte le combinazioni da 3 cifre finche non trovo il valore maggiore
- * oppure provo tutte le combinazioni da 12 cifre dato che il puzzle input contiene codici da 100 cifre
- *
- */
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
@@ -26,7 +17,7 @@ class Main {
     public void mySol() {
         Long res = 0l;
         for (int i = 0; i < this.input.length; i++) {
-            Long actual = this.largestValue(this.input[i]);
+            Long actual = this.largestValue(this.input[i], 12);
             res += actual; 
             System.out.println(actual);
         }
@@ -34,32 +25,46 @@ class Main {
         System.out.printf("::: res = %d :::\n", res);
     }
 
-    public Long largestValue(String a) {
-        Long max = 0l;
+    public Long largestValue(String a, int joltsize) {
+        int  idxmaxval = a.length() - joltsize;
 
-        int[] combo = {0,1,2,3,4,5,6,7,8,9,10,11};
+        // find latest max value starting from len - joltsize to left
+        for (int i = a.length() - joltsize; i >= 0; i--)
+            if (a.charAt(i) >= a.charAt(idxmaxval))
+                idxmaxval = i;
 
-        for (int i = combo.length - 1; i >= 0; i--) {
-            for (; i + 1 < combo.length && combo[i] < combo[i + 1] || combo[i] < a.length(); combo[i]++) {
-                Long actual = this.combineLong(a, combo);
-                if (actual > max) max = actual; 
-            }
-            combo[i] = combo[i - 1] + 2;
+        StringBuilder left = new StringBuilder();
+        // starting from the index of max value to right
+        // build string max if a[idxmaxval + i] > a[len - joltsize + j]
+        for (int i = idxmaxval; i < a.length() - joltsize; i++) {
+            if (left.length() > 0 && left.charAt(left.length() - 1) < a.charAt(i))
+                left.deleteCharAt(left.length() - 1);
+
+            if (a.charAt(i) >= a.charAt(a.length() - joltsize))
+                left.append(a.charAt(i));
         }
+        
+        StringBuilder right = new StringBuilder(a.substring(a.length() - joltsize));
+
+        for (int i = left.length(); i > 0; i--)
+            this.deleteMin(right);
+
+        String max = left.append(right.toString()).toString();
+        // System.out.println(max);
 
         // System.exit(0);
-        return max;
+        return Long.parseLong(max);
     }
 
-    public Long combineLong(String a, int[] idx) {
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < idx.length; i++)
-            b.append(a.charAt(idx[i]));
+    void deleteMin(StringBuilder s) {
+        if (s.length() <= 0) return;
+        int idxminval = 0;
+        for (int i = 0; i < s.length(); i++)
+            if (s.charAt(i) < s.charAt(idxminval)) idxminval = i;
 
-        // System.exit(0);
-        return Long.parseLong(b.toString());
+        s.deleteCharAt(idxminval);
     }
-    
+
 
     public static void main(String[] args) throws IOException {
         Main ex = new Main("""
