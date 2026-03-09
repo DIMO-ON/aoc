@@ -1,6 +1,7 @@
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
+import java.util.ArrayList;
 
 class Main {
     class Range {
@@ -8,6 +9,7 @@ class Main {
         public Long right;
 
         public Range(String s) {
+            s = s.trim();
             // assert regex /d+-/d+
             String[] values = s.split("-");
             values[0] = values[0].replaceAll("^[0]*", "").trim();
@@ -18,102 +20,61 @@ class Main {
         }
 
         public boolean include(Long v) {
-            return v >= left && v <= right;
+            return v >= this.left && v <= this.right;
         }
     }
 
     class Reciept {
-        public List<Range> ranges;
-        public List<Long> ids;
+        public ArrayList<Range> ranges;
+        public ArrayList<Long> ids;
 
         Reciept(String input) {
             String[] parse = input.split("\n");
 
-            this.ranges = new List<Range>[];
-            this.ids    = new List<Long>[];
-
-            int i = 0;
+            this.ranges = new ArrayList<Range>();
+            this.ids    = new ArrayList<Long>();
 
             // parse input
-            for (int i = 0; i < parse.length(); i++) {
+            for (int i = 0; i < parse.length; i++) {
+                parse[i] = parse[i].trim();
                 System.out.println(parse[i]);
                 if (parse[i].contains("-")) this.ranges.add(new Range(parse[i]));
-                else if (parse[i].length > 0) this.ids.add(Long.parseLong(parse[i]));
+                else if (parse[i].length() > 0) this.ids.add(Long.parseLong(parse[i]));
             }
+        }
+
+        public void print() {
+            System.out.println("==================================");
+            System.out.println("\t\t\tprint reciept\t\t\t");
+            System.out.println("\t\t\tPRINT RANGES\t\t\t");
+            for (Range r: this.ranges) System.out.printf("%d-%d\n", r.left, r.right);
+            System.out.println("\t\t\tPRINT IDS\t\t\t");
+            for (Long i: this.ids) System.out.printf("%d\n", i);
+            System.out.println("==================================");
         }
     }
     
     public int mySol(String input) {
         Reciept r = new Reciept(input);
+        r.print();
         int count = 0;
-        for (Range r: r.ranges) {
-            for (int id: r.ids) {
-                if (r.include(id)) count += 1;
+        for (Long id: r.ids) {
+            for (Range range: r.ranges) {
+                boolean check = range.include(id); 
+                // System.out.printf("%d-%d: includes %d -> %b\n", range.left, range.right, id, check);
+                if (check) {
+                    count += 1;
+                    break;
+                }
             }
         }
 
         return count;
     }
 
-    public void mySol(String[] ranges) {
-        Long res = 0L;
-        int totCount = 0;
-        for (int i = 0; i < ranges.length; i += 2) {
-            int count   = 0;
-            
-            while (start <= end) {
-                int idlen = this.idLen(start);
-                if ((idlen % 2) == 0) {
-                    Long check = this.checkId(start);
-                    
-                    if (check.compareTo(0L) > 0) {
-                        res   += check;
-                        count += 1;
-                        // System.out.println(start);
-                    }
-                    start += 1;
-
-                }
-                else {
-                    start = (long) Math.pow(10, idlen);
-                }
-            }
-
-            totCount += count;
-
-            System.out.printf("%s-%s: %d\n", ranges[i], ranges[i + 1], count);
-        }
-
-        System.out.printf("::: sum of nonIds is %d summing %d longs :::\n", res, totCount);
-    }
-
-    int idLen(Long code) {
-        String id = code.toString();
-        return id.length();
-    }
-
-    Long checkId(Long code) {
-        String id = code.toString();
-        int len = id.length();
-        String l = id.substring(0, len/2);
-        String r = id.substring(len/2, len);
-
-        if (l.compareTo(r) == 0)
-            return code;
-        else
-            return 0L;
-    }
-
-
-    public String[] parseElfString(String a) {
-        String b[] = a.replaceAll("-", ",").split(",");
-        return b;
-    }
-    
-
     public static void main(String[] args) throws IOException {
         Main sol = new Main();
-        // String a = Files.readString(Path.of("2025/4/1/input.txt"));
+        String input = Files.readString(Path.of("2025/5/1/input.txt"));
         String example = """
          3-5
          10-14
@@ -127,9 +88,8 @@ class Main {
          17
          32
         """;
-        // String[] grid = sol.parseElfString(a);
-        // int totcount  = sol.mySol(grid);
-        int totcount  = sol.mySol(ranges, ids);
-        System.out.printf("\nthere are %d rolls of paper that can be accessed by a forklift\n", totcount);
+        int totcount  = sol.mySol(input);
+        // int totcount  = sol.mySol(example);
+        System.out.printf("%d of the available ingredient IDs are fresh\n", totcount);
     }
 }
