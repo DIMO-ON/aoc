@@ -6,10 +6,11 @@ import java.util.Collections;
 import java.util.Comparator;
 
 class Main {
-	class Matrix {
-		public ArrayList<ArrayList<Long>> matrix;
-		Matrix(String s) {
-			this.matrix = new ArrayList<ArrayList<Long>>();
+	class StringMatrix {
+		public ArrayList<ArrayList<String>> matrix;
+
+		StringMatrix(String s) {
+			this.matrix = new ArrayList<ArrayList<String>>();
 			String copy = new String(s);
 			copy = copy.replaceAll("\n", ";");
 			copy = copy.replaceAll("[^\\d;]", "-");
@@ -22,22 +23,41 @@ class Main {
 			String[] m = copy.split(";");
 			for (String sr: m) {
 				String[] nrs = sr.split("-");
-				ArrayList<Long> row = new ArrayList<Long>();
-				for (String n: nrs) {
-					row.add(Long.parseLong(n));
-				}
+				ArrayList<String> row = new ArrayList<String>();
+
+				for (String n: nrs) row.add(n);
 				this.matrix.add(row);
 			}
 
+			this.transpose();
+			this.rightmost();
+		}
+
+		public void rightmost() {
+			ArrayList<ArrayList<String>> newm = new ArrayList<ArrayList<String>>();
+
+			for (int i = 0; i < this.matrix.size(); i++) {
+				for (int j = 0; j < this.matrix.get(i).size(); j++) {
+					System.out.println(this.matrix.get(i).get(j));
+				}
+			}
+		}
+
+		ArrayList<Long> getParseArrayLong(int rowindex) {
+			ArrayList<Long> a = new ArrayList<Long>();
+
+			for (String n: this.matrix.get(rowindex)) a.add(Long.parseLong(n));
+
+			return a;
 		}
 
 		public void transpose() {
-			ArrayList<ArrayList<Long>> newm = new ArrayList<ArrayList<Long>>();
+			ArrayList<ArrayList<String>> newm = new ArrayList<ArrayList<String>>();
 			int cols = this.matrix.size();
 			int rows = this.matrix.get(0).size();
 			
 			for (int i = 0; i < rows; i++) {
-				newm.add(new ArrayList<Long>());
+				newm.add(new ArrayList<String>());
 				for (int j = 0; j < cols; j++) {
 					newm.get(i).add(this.matrix.get(j).get(i));
 					// System.out.printf("%d ", newm.get(i).get(j));
@@ -134,15 +154,15 @@ class Main {
     
     public Long mySol(String input) {
 		Long finalres = 0l;
-		Matrix m = new Matrix(input);
-		m.transpose();
+		StringMatrix m = new StringMatrix(input);
+		System.exit(0);
 
 		Operators operators = new Operators(input);
 
 		ArrayList<Operation> operations = new ArrayList<Operation>();
 
 		for (int i = 0; i < m.matrix.size(); i++) {
-			operations.add(new Operation(m.matrix.get(i), operators.ops.get(i)));
+			operations.add(new Operation(m.getParseArrayLong(i), operators.ops.get(i)));
 		}
 
 		for (Operation o: operations) {
