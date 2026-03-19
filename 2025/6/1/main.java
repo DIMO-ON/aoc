@@ -10,54 +10,64 @@ class Main {
 		public ArrayList<ArrayList<Long>> matrix;
 		Matrix(String s) {
 			this.matrix = new ArrayList<ArrayList<Long>>();
-			String copy = s;
+			String copy = new String(s);
 			copy = copy.replaceAll("\n", ";");
 			copy = copy.replaceAll("[^\\d;]", "-");
 			copy = copy.replaceAll("-+", "-");
 			copy = copy.replaceAll("^-", "");
 			copy = copy.replaceAll("-;", ";");
+			copy = copy.replaceAll(";-", ";");
 			copy = copy.replaceAll("-$", "");
-			String[] m = s.plit(";");
-			for (String s: m) {
-				String[] nrs = s.split("-");
+			copy = copy.replaceAll(";;", ";");
+			String[] m = copy.split(";");
+			for (String sr: m) {
+				String[] nrs = sr.split("-");
 				ArrayList<Long> row = new ArrayList<Long>();
 				for (String n: nrs) {
-					row.append(Long.parseLong(n));
+					row.add(Long.parseLong(n));
 				}
-				this.matrix.append(row);
+				this.matrix.add(row);
 			}
 
 		}
 
 		public void transpose() {
 			ArrayList<ArrayList<Long>> newm = new ArrayList<ArrayList<Long>>();
+			int cols = this.matrix.size();
+			int rows = this.matrix.get(0).size();
 			
 			for (int i = 0; i < rows; i++) {
+				newm.add(new ArrayList<Long>());
 				for (int j = 0; j < cols; j++) {
-					newm[j][i] = this.matrix[i][j];
+					newm.get(i).add(this.matrix.get(j).get(i));
+					// System.out.printf("%d ", newm.get(i).get(j));
 				}
+				// System.out.println();
 			}
+			// System.exit(0);
 			
 			this.matrix = newm;
 		}
 	}
 	
-	public enum OP {
-		PLUS("+"),
-		MOLTIPLICATION("*");
+	public class Op {
+		public final char symbol;
 
-		public final String symbol;
+		Op(String s) {
+			this(s.charAt(0));
+		}
 
-		OP(String symbol) {
+		Op(char symbol) {
+			assert symbol != '+' || symbol != '*';
 			this.symbol = symbol;
 		}
 	}
 
 	class Operators {
-		public ArrayList<OP> ops;
+		public ArrayList<Op> ops;
 
 		Operators(String input) {
-			String input2 = input.split("\n");
+			String[] input2 = input.split("\n");
 			String operators = "";
 			for (String s: input2) 
 				if (!s.matches(".*\\d.*")) operators = s;
@@ -67,35 +77,58 @@ class Main {
 			operators = operators.replaceAll("^-", "");
 			operators = operators.replaceAll("-;", ";");
 			operators = operators.replaceAll("-$", "");
+			
 
-			this.ops = new ArrayList<OP>();
-			for (String o: operators)
-				this.ops.append(OP(o));
+			this.ops = new ArrayList<Op>();
+			for (String o: operators.split("-"))
+				this.ops.add(new Op(o));
+
 		}
 	}
 
 	class Operation {
 		private ArrayList<Long> factors;
 		public Long result;
-		private OP operator;
+		private Op operator;
 
-		Operation(ArrayList<Long> f, OP o) {
+		Operation(ArrayList<Long> f, Op o) {
 			this.operator = o;
-			this.result = 0l;
 			this.factors = f;
+			this.resetResult();
 			this.computeAll();
+			this.print();
 		}
 
 		Long compute(Long a, Long b) {
-			switch(this.operator.symbol) {
-				case OP.PLUS: return a + b;
-				case OP.MOLTIPLICATION: return a * b;
+			switch (this.operator.symbol) {
+				case '+': return a + b;
+				case '*': return a * b;
 			}
+			return 0l;
 		}
 
+		public void resetResult() {
+			switch (this.operator.symbol) {
+				case '+':
+					this.result = 0l;
+					break;
+				case '*':
+					this.result = 1l;
+					break;
+			}
+		}
 		public void computeAll() {
+			this.resetResult();
 			for (Long n: this.factors)
-				this.result += n;
+				this.result = compute(this.result, n);
+		}
+
+		public void print() {
+			for (Long n: this.factors) {
+				System.out.printf("%d %c ", n, this.operator.symbol);
+			}
+			
+			System.out.printf("   = %d\n", this.result);
 		}
 	}
     
@@ -106,33 +139,30 @@ class Main {
 
 		Operators operators = new Operators(input);
 
-		ArrayList<Operation> operations;
+		ArrayList<Operation> operations = new ArrayList<Operation>();
 
-		for (int i = 0; i < m.length(); i++)
-			operations.append(new Operation(m.matrix[i], operators.ops));
+		for (int i = 0; i < m.matrix.size(); i++) {
+			operations.add(new Operation(m.matrix.get(i), operators.ops.get(i)));
+		}
 
-		for (Operation o: operations) finalres += o.result;
+		for (Operation o: operations) {
+			finalres += o.result;
+		}
+
+		return finalres;
     }
 
     public static void main(String[] args) throws IOException {
         Main sol = new Main();
-        String input = Files.readString(Path.of("2025/5/2/input.txt"));
-        // String input = Files.readString(Path.of("2025/5/2/input2.txt"));
+		String input = Files.readString(Path.of("2025/6/1/input.txt"));
         String example = """
-         3-5
-         10-14
-         16-20
-         12-18
-         
-         1
-         5
-         8
-         11
-         17
-         32
+123 328  51 64 
+ 45 64  387 23 
+  6 98  215 314
+*   +   *   + 
         """;
         // Long totcount  = sol.mySol(example);
         Long totcount  = sol.mySol(input);
-        System.out.printf("%d of the available ingredient IDs are fresh\n", totcount);
+        System.out.printf("the grand total is %d of the available ingredient IDs are fresh\n", totcount);
     }
 }
