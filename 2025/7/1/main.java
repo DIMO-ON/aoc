@@ -14,11 +14,11 @@ class Main {
 			layers[i][beam] = '|';
 		}
 
-		System.out.println("======< >======");
-		this.print(layers, rows, cols);
 		
 		if (i >= rows) return 0;
 		
+		System.out.println("======< >======");
+		this.print(layers, rows, cols);
 		return 1 + followbeam(beam - 1, i, layers, rows, cols) +
 			     + followbeam(beam + 1, i, layers, rows, cols);
 	}
@@ -35,6 +35,8 @@ class Main {
     public int mySol(String input) {
 		String copy = new String(input);
 		String[] layers = copy.split("\n");
+		// for (String l: layers) System.out.println(l.length());
+		// System.exit(0);
 		int rows = layers.length;
 		int cols = layers[0].length();
 
@@ -46,13 +48,33 @@ class Main {
 		// find seed
 		int seed = 0;
 		for (;seed < cols && mat[0][seed] != 'S'; seed++);
+		int res = followbeam(seed, 0, mat, rows, cols);
 
-		return followbeam(seed, 0, mat, rows, cols);
+		System.out.println("======< >======");
+		this.print(mat, rows, cols);
+		return res;
     }
 
     public static void main(String[] args) throws IOException {
         Main sol = new Main();
 		String input = Files.readString(Path.of("2025/7/1/input.txt"));
+        // String example = "";
+		// example += ".......S.......\n";
+		// example += "...............\n";
+		// example += ".......^.......\n";
+		// example += "...............\n";
+		// example += "......^.^......\n";
+		// example += "...............\n";
+		// example += ".....^.^.^.....\n";
+		// example += "...............\n";
+		// example += "....^.^...^....\n";
+		// example += "...............\n";
+		// example += "...^.^...^.^...\n";
+		// example += "...............\n";
+		// example += "..^...^.....^..\n";
+		// example += "...............\n";
+		// example += ".^.^.^.^.^...^.\n";
+		// example += "...............\n";
         String example = "";
 		example += ".......S.......\n";
 		example += "...............\n";
@@ -70,6 +92,7 @@ class Main {
 		example += "...............\n";
 		example += ".^.^.^.^.^...^.\n";
 		example += "...............\n";
+
 
         int totcount  = sol.mySol(example);
         // totcount  = sol.mySol(input);
