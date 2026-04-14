@@ -11,14 +11,15 @@ class Main {
 		if (beam < 0 || beam >= cols || layers[row][beam] == '|') return 0;
 		int i  = row;
 		for (; i < rows && layers[i][beam] != '^'; i++) {
+			if (layers[i][beam] == '|') return 0;
 			layers[i][beam] = '|';
 		}
 
 		
 		if (i >= rows) return 0;
 		
-		System.out.println("======< >======");
-		this.print(layers, rows, cols);
+		// System.out.println("======< >======");
+		// this.print(layers, rows, cols);
 		return 1 + followbeam(beam - 1, i, layers, rows, cols) +
 			     + followbeam(beam + 1, i, layers, rows, cols);
 	}
@@ -50,8 +51,8 @@ class Main {
 		for (;seed < cols && mat[0][seed] != 'S'; seed++);
 		int res = followbeam(seed, 0, mat, rows, cols);
 
-		System.out.println("======< >======");
-		this.print(mat, rows, cols);
+		// System.out.println("======< >======");
+		// this.print(mat, rows, cols);
 		return res;
     }
 
@@ -95,7 +96,7 @@ class Main {
 
 
         int totcount  = sol.mySol(example);
-        // totcount  = sol.mySol(input);
+        totcount  = sol.mySol(input);
         System.out.printf("tachyon beam is split a total of %d times", totcount);
     }
 }
