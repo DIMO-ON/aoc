@@ -7,21 +7,19 @@ import java.util.Comparator;
 
 class Main {
 	private int followbeam(int beam, int row, char[][] layers, int rows, int cols) {
-		if (row < 0 || row >= rows) return 0;
-		if (beam < 0 || beam >= cols || layers[row][beam] == '|') return 0;
-		int i  = row;
-		for (; i < rows && layers[i][beam] != '^'; i++) {
-			if (layers[i][beam] == '|') return 0;
-			layers[i][beam] = '|';
+		if (beam < 0 || beam >= cols) return 0;
+		if (row < 0 || row >= rows || layers[row][beam] == '|') {
+			// System.out.printf("======< %d >======\n", tl[0]);
+			// this.print(layers, rows, cols);
+			return 1;
 		}
+		
+		if (layers[row][beam] == '^')
+			return followbeam(beam - 1, row, layers, rows, cols, tl) +
+				   followbeam(beam + 1, row, layers, rows, cols, tl);
 
-		
-		if (i >= rows) return 0;
-		
-		// System.out.println("======< >======");
-		// this.print(layers, rows, cols);
-		return 1 + followbeam(beam - 1, i, layers, rows, cols)
-			     + followbeam(beam + 1, i, layers, rows, cols);
+		layers[row][beam] = '|';
+		return followbeam(beam, row + 1, layers, rows, cols, tl);
 	}
 
 	public void print(char[][] s, int rows, int cols) {
@@ -79,7 +77,7 @@ class Main {
 
 
         int totcount  = sol.mySol(example);
-        totcount  = sol.mySol(input);
-        System.out.printf("tachyon beam is split a total of %d times", totcount);
+		// totcount  = sol.mySol(input);
+        System.out.printf("the particle ends up on %d different timelines", totcount);
     }
 }
