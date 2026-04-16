@@ -5,21 +5,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+// System.out.println("======< >======\n");
+// this.print(layers, rows, cols);
 class Main {
-	private int followbeam(int beam, int row, char[][] layers, int rows, int cols) {
-		if (beam < 0 || beam >= cols) return 0;
-		if (row < 0 || row >= rows || layers[row][beam] == '|') {
-			// System.out.printf("======< %d >======\n", tl[0]);
-			// this.print(layers, rows, cols);
-			return 1;
-		}
+	private Long followbeam(int col, int row, char[][] mat, Long[][] counts, int rows, int cols) {
+		if (col < 0 || col >= cols) return 1l;
+		if (row < 0 || row >= rows) return 1l;
 		
-		if (layers[row][beam] == '^')
-			return followbeam(beam - 1, row, layers, rows, cols, tl) +
-				   followbeam(beam + 1, row, layers, rows, cols, tl);
+		if (mat[row][col] == '^') {
+			if (counts[row][col] <= 0) {
+				counts[row][col]  = followbeam(col - 1, row, mat, counts, rows, cols);
+			    counts[row][col] += followbeam(col + 1, row, mat, counts, rows, cols);
+			}
 
-		layers[row][beam] = '|';
-		return followbeam(beam, row + 1, layers, rows, cols, tl);
+			return counts[row][col];
+		}
+
+		return followbeam(col, row + 1, mat, counts, rows, cols);
 	}
 
 	public void print(char[][] s, int rows, int cols) {
@@ -31,7 +33,7 @@ class Main {
 		}
 	}
 
-    public int mySol(String input) {
+    public Long mySol(String input) {
 		String copy = new String(input);
 		String[] layers = copy.split("\n");
 		// for (String l: layers) System.out.println(l.length());
@@ -40,14 +42,17 @@ class Main {
 		int cols = layers[0].length();
 
 		char[][] mat = new char[layers.length][];
+		Long[][] counts = new Long[layers.length][];
 		for (int i = 0; i < layers.length; i++) {
 			mat[i] = layers[i].toCharArray();
+			counts[i] = new Long[cols];
+			for (int j = 0; j < cols; j++) counts[i][j] = 0l;
 		}
 		
 		// find seed
 		int seed = 0;
 		for (;seed < cols && mat[0][seed] != 'S'; seed++);
-		int res = followbeam(seed, 0, mat, rows, cols);
+		Long res = followbeam(seed, 0, mat, counts, rows, cols);
 
 		// System.out.println("======< >======");
 		// this.print(mat, rows, cols);
@@ -56,7 +61,7 @@ class Main {
 
     public static void main(String[] args) throws IOException {
         Main sol = new Main();
-		String input = Files.readString(Path.of("2025/7/1/input.txt"));
+		String input = Files.readString(Path.of("2025/7/2/input.txt"));
         String example = "";
 		example += ".......S.......\n";
 		example += "...............\n";
@@ -76,8 +81,8 @@ class Main {
 		example += "...............\n";
 
 
-        int totcount  = sol.mySol(example);
-		// totcount  = sol.mySol(input);
+        Long totcount  = sol.mySol(example);
+		totcount  = sol.mySol(input);
         System.out.printf("the particle ends up on %d different timelines", totcount);
     }
 }
