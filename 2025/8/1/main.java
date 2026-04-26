@@ -2,66 +2,90 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.stream.Collectors;
+import java.lang.Math;
 
-// System.out.println("======< >======\n");
-// this.print(layers, rows, cols);
 class Main {
-	private Long followbeam(int col, int row, char[][] mat, Long[][] counts, int rows, int cols) {
-		if (col < 0 || col >= cols) return 1l;
-		if (row < 0 || row >= rows) return 1l;
-		
-		if (mat[row][col] == '^') {
-			if (counts[row][col] <= 0) {
-				counts[row][col]  = followbeam(col - 1, row, mat, counts, rows, cols);
-			    counts[row][col] += followbeam(col + 1, row, mat, counts, rows, cols);
-			}
+	private class Coordinate {
+		private Long x, y, z;
 
-			return counts[row][col];
+		Coordinate(Long x, Long y, Long z) {
+			Long[] c = {x, y, z};
+			this.set(c);
 		}
 
-		return followbeam(col, row + 1, mat, counts, rows, cols);
+		Coordinate(Long[] c) {
+			this.set(c);
+		}
+
+		private void set(Long[] c) {
+			assert c != null && c.length == 3 : "array of Long must have 3 element"; 
+			this.x = c[0];
+			this.y = c[1];
+			this.z = c[2];
+		}
+
+
+		public Long distance(Coordinate o) {
+			assert this != o: "same element";
+			return this.distance(o.x, o.y, o.z);
+		}
+
+		public Long distance(Long x, Long y, Long z) {
+			return (long) Math.sqrt(
+						Math.pow(this.x - x, 2) +
+						Math.pow(this.y - y, 2) +
+						Math.pow(this.z - z, 2)
+						);
+		}
+
+		public void print() {
+			System.out.printf("%d\t%d\t%d\n", this.x, this.y, this.z);
+		}
+
 	}
 
-	public void print(char[][] s, int rows, int cols) {
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; j++)
-				System.out.printf("%c", s[i][j]);
+	public void minDistance(ArrayList<Coordinate> all) {
+	// TODO public Set<Coordinate> minDistance(ArrayList<Coordinate> all, ArrayList<Set<Coordinate>>seen) {
+	
+		Long min = 99999999999999999l;
 
-			System.out.println();
+		for (Coordinate a: all) {
+			for (Coordinate b: all) {
+				if (a != b) {
+					Long actualdist = 0l;
+					actualdist = a.distance(b);
+					min = actualdist < min? actualdist: min;
+				}
+			}
 		}
+		System.out.println(min);
+
 	}
 
     public Long mySol(String input) {
-		String copy = new String(input);
-		String[] layers = copy.split("\n");
-		// for (String l: layers) System.out.println(l.length());
-		// System.exit(0);
-		int rows = layers.length;
-		int cols = layers[0].length();
+		String[] copy = input.split("\n");
+		ArrayList<Long[]> parse_coordinates = Arrays.stream(copy)
+			.map(i -> Arrays.stream(i.split(","))
+				.map(Long::parseLong).toArray(Long[]::new)
+			)
+			.collect(Collectors.toCollection(ArrayList::new));
 
-		char[][] mat = new char[layers.length][];
-		Long[][] counts = new Long[layers.length][];
-		for (int i = 0; i < layers.length; i++) {
-			mat[i] = layers[i].toCharArray();
-			counts[i] = new Long[cols];
-			for (int j = 0; j < cols; j++) counts[i][j] = 0l;
-		}
-		
-		// find seed
-		int seed = 0;
-		for (;seed < cols && mat[0][seed] != 'S'; seed++);
-		Long res = followbeam(seed, 0, mat, counts, rows, cols);
+		ArrayList<Coordinate> coordinates = parse_coordinates.stream()
+			.map(Coordinate::new)
+			.collect(Collectors.toCollection(ArrayList::new));
 
-		// System.out.println("======< >======");
-		// this.print(mat, rows, cols);
-		return res;
+		// for (Coordinate c: coordinates) c.print();
+		minDistance(coordinates);
+		return 0l;
     }
 
     public static void main(String[] args) throws IOException {
         Main sol = new Main();
-		String input = Files.readString(Path.of("2025/7/2/input.txt"));
+		String input = Files.readString(Path.of("2025/8/1/input.txt"));
         String example = "";
 		example += "162,817,812\n";
 		example += "57,618,57\n";
@@ -85,7 +109,7 @@ class Main {
 		example += "425,690,689\n";
 
         Long totcount  = sol.mySol(example);
-		totcount  = sol.mySol(input);
-        System.out.printf("the particle ends up on %d different timelines", totcount);
+		// totcount  = sol.mySol(input);
+        System.out.printf("mult three largest circuits: %d", totcount);
     }
 }
