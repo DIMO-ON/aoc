@@ -7,6 +7,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.lang.Math;
+import java.util.TreeSet;
+import java.util.Set;
+
 
 class Main {
 	private class Coordinate {
@@ -48,22 +51,25 @@ class Main {
 
 	}
 
-	public void minDistance(ArrayList<Coordinate> all) {
-	// TODO public Set<Coordinate> minDistance(ArrayList<Coordinate> all, ArrayList<Set<Coordinate>>seen) {
-	
+	public TreeSet<Integer> minDistance(ArrayList<Coordinate> all) {
+		if (all.size() <= 1) return null;
 		Long min = 99999999999999999l;
+		Integer aindex = 0;
+		Integer bindex = 0;
 
-		for (Coordinate a: all) {
-			for (Coordinate b: all) {
-				if (a != b) {
-					Long actualdist = 0l;
-					actualdist = a.distance(b);
-					min = actualdist < min? actualdist: min;
+		for (int i = 0; i < all.size(); i++) {
+			for (int j = i + 1; j < all.size(); j++) {
+				Long actualdist = 0l;
+				actualdist = all.get(i).distance(all.get(j));
+				if (actualdist < min) {
+					min = actualdist;
+					aindex = i;
+					bindex = j;
 				}
 			}
 		}
-		System.out.println(min);
 
+		return new TreeSet<Integer>(Set.of(aindex, bindex));
 	}
 
     public Long mySol(String input) {
@@ -78,8 +84,31 @@ class Main {
 			.map(Coordinate::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		// for (Coordinate c: coordinates) c.print();
-		minDistance(coordinates);
+		ArrayList<Set<Integer>> graphs = new ArrayList<Set<Integer>>();
+
+		while (coordinates.size() > 0) {
+			TreeSet<Integer> s = minDistance(coordinates);
+			if (s == null) break;
+			for (Set<Integer> g: graphs) {
+				Set<Integer> diff = new TreeSet<>(s);
+				if (diff.removeAll(g)) {
+					g.addAll(s);
+					break;
+				}
+			}
+			coordinates.remove((int) s.last());
+
+			if (s.size() >= 2) graphs.add(s);
+		}
+
+
+		// graphs.sort(Comparator.comparingInt((TreeSet<Integer> s) -> s.size()).reversed());
+		for (Set g: graphs) System.out.println(g.size());
+
+		Integer mul = 0;
+
+		for (int i = 0; i < 3; i++) mul *= graphs.get(i).size();
+
 		return 0l;
     }
 
