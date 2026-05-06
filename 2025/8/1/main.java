@@ -12,15 +12,15 @@ import java.util.Set;
 
 
 class Main {
-	private class Coordinate {
+	private class ThreeDpt {
 		private Long x, y, z;
 
-		Coordinate(Long x, Long y, Long z) {
+		ThreeDpt(Long x, Long y, Long z) {
 			Long[] c = {x, y, z};
 			this.set(c);
 		}
 
-		Coordinate(Long[] c) {
+		ThreeDpt(Long[] c) {
 			this.set(c);
 		}
 
@@ -32,7 +32,7 @@ class Main {
 		}
 
 
-		public Long distance(Coordinate o) {
+		public Long distance(ThreeDpt o) {
 			assert this != o: "same element";
 			return this.distance(o.x, o.y, o.z);
 		}
@@ -45,13 +45,24 @@ class Main {
 						);
 		}
 
-		public void print() {
-			System.out.printf("%d\t%d\t%d\n", this.x, this.y, this.z);
+		public void print(String endl) {
+			if (endl == null) endl = "\n";
+			System.out.printf("%d\t%d\t%d%s", this.x, this.y, this.z, endl);
 		}
 
 	}
 
-	public TreeSet<Integer> minDistance(ArrayList<Coordinate> all) {
+	private class Line {
+		private ThreeDpt a;
+		private ThreeDpt b;
+
+		public Long distance() {
+			return a.distance(b);
+		}
+
+	}
+
+	public TreeSet<Integer> minDistance(ArrayList<ThreeDpt> all) {
 		if (all.size() <= 1) return null;
 		Long min = 99999999999999999l;
 		Integer aindex = 0;
@@ -80,8 +91,8 @@ class Main {
 			)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		ArrayList<Coordinate> coordinates = parse_coordinates.stream()
-			.map(Coordinate::new)
+		ArrayList<ThreeDpt> coordinates = parse_coordinates.stream()
+			.map(ThreeDpt::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
 		ArrayList<Set<Integer>> graphs = new ArrayList<Set<Integer>>();
@@ -89,27 +100,39 @@ class Main {
 		while (coordinates.size() > 0) {
 			TreeSet<Integer> s = minDistance(coordinates);
 			if (s == null) break;
+			coordinates.remove((int) s.last());
 			for (Set<Integer> g: graphs) {
-				Set<Integer> diff = new TreeSet<>(s);
-				if (diff.removeAll(g)) {
+				// System.out.printf("%d:\n",g.size());
+				// Set<Integer> diff = new TreeSet<>(s);
+				// if (diff.removeAll(g)) {
+				if (s.removeAll(g)) {
+					// g.addAll(diff);
 					g.addAll(s);
+					System.out.printf("%d:\t",g.size());
+					// coordinates.get(s.first()).print();
+					// coordinates.get(s.first()).print(" -> ");
+					// coordinates.get(s.last()).print("\n");
 					break;
 				}
 			}
-			coordinates.remove((int) s.last());
+			// System.out.printf("%d:\n",s.size());
 
 			if (s.size() >= 2) graphs.add(s);
 		}
 
 
-		// graphs.sort(Comparator.comparingInt((TreeSet<Integer> s) -> s.size()).reversed());
-		for (Set g: graphs) System.out.println(g.size());
+		// for (Set g: graphs) System.out.println(g.size());
+		for (Set<Integer> g: graphs) {
+			System.out.println();
+			for (Integer i: g)
+				System.out.printf("%d ", i);
+		}
 
-		Integer mul = 0;
+		Long mul = 0l;
 
 		for (int i = 0; i < 3; i++) mul *= graphs.get(i).size();
 
-		return 0l;
+		return mul;
     }
 
     public static void main(String[] args) throws IOException {
@@ -139,6 +162,6 @@ class Main {
 
         Long totcount  = sol.mySol(example);
 		// totcount  = sol.mySol(input);
-        System.out.printf("mult three largest circuits: %d", totcount);
+        // System.out.printf("mult three largest circuits: %d", totcount);
     }
 }
