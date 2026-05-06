@@ -10,7 +10,7 @@ import java.lang.Math;
 import java.util.TreeSet;
 import java.util.Set;
 
-
+// GUARDA LA CONSEGNA: fare solo le prime n giunzioni
 class Main {
 	private class ThreeDpt {
 		private Long x, y, z;
@@ -60,6 +60,17 @@ class Main {
 			return a.distance(b);
 		}
 
+		public Line(ThreeDpt a, ThreeDpt b) {
+			this.a = a;
+			this.b = b;
+		}
+
+		public void print() {
+			a.print(" - > ");
+			b.print(" : ");
+			System.out.printf("%d\n", this.distance());
+		}
+
 	}
 
 	public TreeSet<Integer> minDistance(ArrayList<ThreeDpt> all) {
@@ -95,44 +106,23 @@ class Main {
 			.map(ThreeDpt::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		ArrayList<Set<Integer>> graphs = new ArrayList<Set<Integer>>();
 
-		while (coordinates.size() > 0) {
-			TreeSet<Integer> s = minDistance(coordinates);
-			if (s == null) break;
-			coordinates.remove((int) s.last());
-			for (Set<Integer> g: graphs) {
-				// System.out.printf("%d:\n",g.size());
-				// Set<Integer> diff = new TreeSet<>(s);
-				// if (diff.removeAll(g)) {
-				if (s.removeAll(g)) {
-					// g.addAll(diff);
-					g.addAll(s);
-					System.out.printf("%d:\t",g.size());
-					// coordinates.get(s.first()).print();
-					// coordinates.get(s.first()).print(" -> ");
-					// coordinates.get(s.last()).print("\n");
-					break;
-				}
+		ArrayList<Line> distances = new ArrayList<Line>();
+
+		for (int i = 0; i < coordinates.size(); i++) {
+			for (int j = i + 1; j < coordinates.size(); j++) {
+				distances.add(new Line(coordinates.get(i), coordinates.get(j)));
 			}
-			// System.out.printf("%d:\n",s.size());
-
-			if (s.size() >= 2) graphs.add(s);
 		}
 
+		distances.sort((a, b) -> {
+			return a.distance().compareTo(b.distance());
+		});
 
-		// for (Set g: graphs) System.out.println(g.size());
-		for (Set<Integer> g: graphs) {
-			System.out.println();
-			for (Integer i: g)
-				System.out.printf("%d ", i);
-		}
+		for (Line l: distances) l.print();
 
-		Long mul = 0l;
+		return 0l;
 
-		for (int i = 0; i < 3; i++) mul *= graphs.get(i).size();
-
-		return mul;
     }
 
     public static void main(String[] args) throws IOException {
