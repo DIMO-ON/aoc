@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 import java.util.Comparator;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.lang.Math;
 import java.util.TreeSet;
 import java.util.Set;
@@ -14,18 +16,20 @@ import java.util.Set;
 class Main {
 	private class ThreeDpt {
 		private Long x, y, z;
+		public Integer idxorigin; 
 
-		ThreeDpt(Long x, Long y, Long z) {
+		ThreeDpt(Integer idx, Long x, Long y, Long z) {
 			Long[] c = {x, y, z};
-			this.set(c);
+			this.set(idx, c);
 		}
 
-		ThreeDpt(Long[] c) {
-			this.set(c);
+		ThreeDpt(Integer idx, Long[] c) {
+			this.set(idx, c);
 		}
 
-		private void set(Long[] c) {
+		private void set(Integer idx, Long[] c) {
 			assert c != null && c.length == 3 : "array of Long must have 3 element"; 
+			this.idxorigin = idx;
 			this.x = c[0];
 			this.y = c[1];
 			this.z = c[2];
@@ -71,30 +75,24 @@ class Main {
 			System.out.printf("%d\n", this.distance());
 		}
 
-	}
+		public void printIdxs() {
+			System.out.printf("%d -> %d: %d\n", a.idxorigin, b.idxorigin, this.distance());
 
-	public TreeSet<Integer> minDistance(ArrayList<ThreeDpt> all) {
-		if (all.size() <= 1) return null;
-		Long min = 99999999999999999l;
-		Integer aindex = 0;
-		Integer bindex = 0;
-
-		for (int i = 0; i < all.size(); i++) {
-			for (int j = i + 1; j < all.size(); j++) {
-				Long actualdist = 0l;
-				actualdist = all.get(i).distance(all.get(j));
-				if (actualdist < min) {
-					min = actualdist;
-					aindex = i;
-					bindex = j;
-				}
-			}
 		}
 
-		return new TreeSet<Integer>(Set.of(aindex, bindex));
 	}
 
-    public Long mySol(String input) {
+	public Integer findSet(ArrayList<TreeSet<Integer>> sets, int idx) {
+		for (int i = 0; i < sets.size(); i++)
+			if (sets.get(i).contains(idx))
+				return i;
+
+		return -1;
+		
+	}
+
+
+    public Long mySol(String input, int ptslimit) {
 		String[] copy = input.split("\n");
 		ArrayList<Long[]> parse_coordinates = Arrays.stream(copy)
 			.map(i -> Arrays.stream(i.split(","))
@@ -102,10 +100,9 @@ class Main {
 			)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		ArrayList<ThreeDpt> coordinates = parse_coordinates.stream()
-			.map(ThreeDpt::new)
+		ArrayList<ThreeDpt> coordinates = IntStream.range(0, parse_coordinates.size())
+			.mapToObj(i -> new ThreeDpt(i, parse_coordinates.get(i)))
 			.collect(Collectors.toCollection(ArrayList::new));
-
 
 		ArrayList<Line> distances = new ArrayList<Line>();
 
@@ -119,7 +116,32 @@ class Main {
 			return a.distance().compareTo(b.distance());
 		});
 
-		for (Line l: distances) l.print();
+		// for (Line l: distances) l.printIdxs();
+
+		// kruskal
+		ArrayList<TreeSet<Integer>> circuits = new ArrayList<TreeSet<Integer>>();
+		for (Integer i = 0; i < coordinates.size(); i++) {
+			circuits.add(new TreeSet<Integer>());
+			circuits.get(i).add(i);
+		}
+
+
+		int count = 0;
+		for (Line l: distances) {
+			if (count >= ptslimit) break;
+			int idxseta = findSet(circuits, l.a.idxorigin);
+			int idxsetb = findSet(circuits, l.b.idxorigin);
+			// System.out.printf("%d %d\n", idxseta, idxsetb);
+			if (idxseta < 0 || idxsetb < 0 || idxseta == idxsetb) continue;
+
+			circuits.get(idxseta).addAll(circuits.get(idxsetb));
+			circuits.remove(idxsetb);
+			count += 1;
+		}
+
+		circuits.sort((a, b) -> {return -(new Integer(a.size())).compareTo(b.size());});
+
+		for (TreeSet<Integer> s: circuits) System.out.println(s);
 
 		return 0l;
 
@@ -150,8 +172,8 @@ class Main {
 		example += "984,92,344\n";
 		example += "425,690,689\n";
 
-        Long totcount  = sol.mySol(example);
-		// totcount  = sol.mySol(input);
+        Long totcount  = sol.mySol(example, 10);
+		// totcount  = sol.mySol(input, 1000);
         // System.out.printf("mult three largest circuits: %d", totcount);
     }
 }
