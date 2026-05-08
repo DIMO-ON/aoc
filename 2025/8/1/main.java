@@ -80,6 +80,11 @@ class Main {
 
 		}
 
+		public void printABidxs() {
+			System.out.println(this.a.idxorigin);
+			System.out.println(this.b.idxorigin);
+		}
+
 	}
 
 	public Integer findSet(ArrayList<TreeSet<Integer>> sets, int idx) {
@@ -104,8 +109,8 @@ class Main {
 			.mapToObj(i -> new ThreeDpt(i, parse_coordinates.get(i)))
 			.collect(Collectors.toCollection(ArrayList::new));
 
+		// kruskal
 		ArrayList<Line> distances = new ArrayList<Line>();
-
 		for (int i = 0; i < coordinates.size(); i++) {
 			for (int j = i + 1; j < coordinates.size(); j++) {
 				distances.add(new Line(coordinates.get(i), coordinates.get(j)));
@@ -116,9 +121,6 @@ class Main {
 			return a.distance().compareTo(b.distance());
 		});
 
-		// for (Line l: distances) l.printIdxs();
-
-		// kruskal
 		ArrayList<TreeSet<Integer>> circuits = new ArrayList<TreeSet<Integer>>();
 		for (Integer i = 0; i < coordinates.size(); i++) {
 			circuits.add(new TreeSet<Integer>());
@@ -128,22 +130,25 @@ class Main {
 
 		int count = 0;
 		for (Line l: distances) {
-			if (count >= ptslimit) break;
+			count += 1;
+			if (count > ptslimit) break;
 			int idxseta = findSet(circuits, l.a.idxorigin);
 			int idxsetb = findSet(circuits, l.b.idxorigin);
-			// System.out.printf("%d %d\n", idxseta, idxsetb);
 			if (idxseta < 0 || idxsetb < 0 || idxseta == idxsetb) continue;
 
 			circuits.get(idxseta).addAll(circuits.get(idxsetb));
 			circuits.remove(idxsetb);
-			count += 1;
 		}
 
-		circuits.sort((a, b) -> {return -(new Integer(a.size())).compareTo(b.size());});
+		circuits.sort((a, b) -> {return (new Integer(b.size())).compareTo(a.size());});
 
-		for (TreeSet<Integer> s: circuits) System.out.println(s);
+		Long re = 1l;
+		for (int i = 0; i < circuits.size() && i < 3; i++) {
+			re *= circuits.get(i).size();
+			System.out.println(circuits.get(i));
+		}
 
-		return 0l;
+		return re;
 
     }
 
@@ -172,8 +177,9 @@ class Main {
 		example += "984,92,344\n";
 		example += "425,690,689\n";
 
-        Long totcount  = sol.mySol(example, 10);
-		// totcount  = sol.mySol(input, 1000);
-        // System.out.printf("mult three largest circuits: %d", totcount);
+        Long totcount = 0l;
+        totcount = sol.mySol(example, 10);
+		totcount = sol.mySol(input, 1000);
+        System.out.printf("mult three largest circuits: %d", totcount);
     }
 }
