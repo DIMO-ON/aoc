@@ -46,18 +46,23 @@ class Main {
 			this.b = b;
 		}
 
-		public Rectangle intercept(Segment other) {
-			if (this.a.x != other.a.x || this.a.y != other.a.y) return null;
+		public Rectangle interceptHoriz(Segment other) {
+			if (this.a.x != other.a.x && this.a.y != other.a.y) return null;
 			if (this.b.x < other.a.x || this.a.x > other.b.x) return null;
 			if (this.b.x < other.a.x || this.a.x > other.b.x) return null;
-			if (this.a.x > other.a.x) {
-				
-			}
 			Long ax = this.a.x > other.a.x? this.a.x: other.a.x;
 			Long bx = this.b.x < other.b.x? this.b.x: other.b.x;
-			TDpt a = new TDpt(ax, other.a.y);
-			TDpt b = new TDpt(bx, other.a.y);
-			return new Segment(a, b);
+
+			TDpt newa = new TDpt(ax, other.a.y);
+			TDpt newb = new TDpt(bx, other.a.y);
+			if (this.a.y > other.a.y) {
+				Segment base   = new Segment(newa, newb);
+				Segment height = new Segment(this.a, this.b);
+			} else {
+				Segment base   = new Segment(newa, newb);
+				Segment height = new Segment(newa, newb);
+			}
+			return null;
 		}
 
 		@Override
