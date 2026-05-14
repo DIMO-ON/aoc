@@ -2,6 +2,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Collection;
@@ -12,21 +13,63 @@ import java.util.stream.IntStream;
 import java.lang.Math;
 import java.util.TreeSet;
 import java.util.Set;
+import java.util.Objects;
 
 class Main {
 	private class Rectangle {
-		public Segment base;
-		public Segment height;
+		public TDpt leftuppervertix;
+		public TDpt rightbottomvertix;
+		public TDpt leftbottomvertix;
+		public TDpt rightuppervertix;
+
+		public Rectangle(TDpt left, TDpt right) {
+			this.leftuppervertix   = left;
+			this.rightbottomvertix = right;
+			this.leftbottomvertix  = new TDpt(left.x, right.y);
+			this.rightuppervertix  = new TDpt(right.x, left.y);
+		}
+
+		public List<TDpt> vertices() {
+			return Arrays.asList( 
+				leftuppervertix,
+				rightbottomvertix,
+				leftbottomvertix,
+				rightuppervertix
+				);
+		}
+		
+		public boolean isInscribed(ArrayList<Rectangle> area) {
+			return this.vertices().stream()
+				.allMatch(v -> area.stream().anyMatch(r -> r != null && r.includes(v))); 
+		}
+
+		public boolean includes(TDpt p) {
+			return p.x.compareTo(leftuppervertix.x) >= 0 && p.x.compareTo(rightbottomvertix.x) <= 0 &&
+				   p.y.compareTo(leftuppervertix.y) >= 0 && p.y.compareTo(rightbottomvertix.y) <= 0;
+		}
+
+		public Long area() {
+			TDpt a = leftuppervertix;
+			TDpt b = rightbottomvertix;
+			Long height = Math.abs(a.y - b.y) + 1;
+			Long base   = Math.abs(a.x - b.x) + 1;
+			return height * base;
+		}
 
 		@Override
 		public String toString() {
-			return "base   = " + base.toString() + " " +
-				   "height = " + height.toString();
+			return "[leftupper = "   + leftuppervertix.toString() + " " +
+				   "rightbottom = " + rightbottomvertix.toString() + "] - area: " + this.area();
 		}
 	}
 
 	private class TDpt {
 		public Long x, y;
+		public TDpt(Long x, Long y) {
+			this.x = x;
+			this.y = y;
+		}
+
 		public TDpt(ArrayList<Long> l) {
 			this.x = l.get(0);
 			this.y = l.get(1);
@@ -41,28 +84,42 @@ class Main {
 	private class Segment {
 		public TDpt a, b;
 
-		public Segment(TDpt a, TDpt b) {
-			this.a = a;
-			this.b = b;
+		public Segment(TDpt a, TDpt b, boolean base) {
+			if (base) {
+				this.a = a.x <= b.x? a: b;
+				this.b = a.x > b.x? a: b;
+			} else {
+				this.a = a.y <= b.y? a: b;
+				this.b = a.y > b.y? a: b;
+			}
+		}
+
+		public Rectangle interceptVert(Segment other) {
+			if (this == other) return null;
+			Segment left  = this.a.x <= other.a.x? this: other;
+			Segment right = this.a.x >  other.a.x? this: other;
+			// System.out.println("upper " + upper + " - lower " + lower);
+			if (other.a.x != other.a.x && this.a.y != other.a.y) return null;
+			if (left.a.y > right.b.y || left.b.y < right.a.y) return null;
+
+			TDpt lupper = left.a.y >= right.a.y? left.a: new TDpt(left.a.x, right.a.y);
+			TDpt rbotto = right.b.y <= left.b.y? right.b: new TDpt(right.b.x, left.b.y);
+
+			return new Rectangle(lupper, rbotto);
 		}
 
 		public Rectangle interceptHoriz(Segment other) {
-			if (this.a.x != other.a.x && this.a.y != other.a.y) return null;
-			if (this.b.x < other.a.x || this.a.x > other.b.x) return null;
-			if (this.b.x < other.a.x || this.a.x > other.b.x) return null;
-			Long ax = this.a.x > other.a.x? this.a.x: other.a.x;
-			Long bx = this.b.x < other.b.x? this.b.x: other.b.x;
+			if (this == other) return null;
+			Segment upper = this.a.y <= other.a.y? this: other;
+			Segment lower = this.a.y >  other.a.y? this: other;
+			// System.out.println("upper " + upper + " - lower " + lower);
+			if (other.a.x != other.a.x && this.a.y != other.a.y) return null;
+			if (upper.a.x > lower.b.x || upper.b.x < lower.a.x) return null;
 
-			TDpt newa = new TDpt(ax, other.a.y);
-			TDpt newb = new TDpt(bx, other.a.y);
-			if (this.a.y > other.a.y) {
-				Segment base   = new Segment(newa, newb);
-				Segment height = new Segment(this.a, this.b);
-			} else {
-				Segment base   = new Segment(newa, newb);
-				Segment height = new Segment(newa, newb);
-			}
-			return null;
+			TDpt lupper = upper.a.x >= lower.a.x? upper.a: new TDpt(lower.a.x, upper.a.y);
+			TDpt rbotto = lower.b.x <= upper.b.x? lower.b: new TDpt(upper.b.x, lower.b.y);
+
+			return new Rectangle(lupper, rbotto);
 		}
 
 		@Override
@@ -79,10 +136,10 @@ class Main {
 			TDpt a = vertices.get(i);
 			for (int j = i + 1; j < vertices.size(); j ++) {
 				TDpt b = vertices.get(j);
-				if (coordinate == 0)
-					if (a.x.equals(b.x)) col.add(new Segment(a, b));
-				if (coordinate == 1)
-					if (a.y.equals(b.y)) col.add(new Segment(a, b));
+				if (coordinate == 1) // horizontally aligned 
+					if (a.x.equals(b.x)) col.add(new Segment(a, b, false));
+				if (coordinate == 0) // vertically aligned 
+					if (a.y.equals(b.y)) col.add(new Segment(a, b, true));
 			}
 		}
 
@@ -100,34 +157,42 @@ class Main {
 			.map(TDpt::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
+		vertices.sort((a, b) -> a.y.compareTo(b.y));
+
 		// vertices.forEach(System.out::println);
 
-		ArrayList<Segment> bases = collectSegments(vertices, 0);
+		ArrayList<Segment> bases   = collectSegments(vertices, 0);
 		ArrayList<Segment> heights = collectSegments(vertices, 1);
 		// bases.forEach(System.out::println);
-		// heights.forEach(System.out::println);
+		heights.forEach(System.out::println);
 		
 		// collect rectangles
 		ArrayList<Rectangle> internalspace = new ArrayList<Rectangle>();
+		// for (int i  = 0; i < bases.size(); i++)
+		// 	for (int j = i + 1; j < bases.size(); j++)
+		// 		internalspace.add(bases.get(i).interceptHoriz(bases.get(j)));
 
+		for (int i  = 0; i < heights.size(); i++)
+			for (int j = i + 1; j < heights.size(); j++)
+				internalspace.add(heights.get(i).interceptVert(heights.get(j)));
 
-
+		internalspace.removeIf(Objects::isNull);
+		internalspace.forEach(System.out::println);
+		System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
-		
 
-		// for (int i = 0; i < vertices.size(); i++) {
-		// 	ArrayList<Long> pointa = vertices.get(i);
-		// 	for (int j = i + 1; j < vertices.size(); j++) {
-		// 		ArrayList<Long> pointb = vertices.get(j);
-		// 		Long height = Math.abs(pointa.get(1) - pointb.get(1) + 1);
-		// 		Long base   = Math.abs(pointa.get(0) - pointb.get(0) + 1);
-		// 		Long actualarea = height * base;
-		// 		maxarea = maxarea < actualarea? actualarea: maxarea; 
-		// 	}
-		// }
-
-
+		ArrayList<Rectangle> internalrectangles = new ArrayList<Rectangle>();
+		for (int i = 0; i < vertices.size(); i++) {
+			TDpt pointa = vertices.get(i);
+			for (int j = i + 1; j < vertices.size(); j++) {
+				TDpt pointb = vertices.get(j);
+				Rectangle actual = new Rectangle(pointa, pointb);
+				if (!actual.isInscribed(internalspace)) continue;
+				// System.out.println(actual);
+				maxarea = maxarea < actual.area()? actual.area(): maxarea;
+			}
+		}
 		return maxarea;
     }
 
