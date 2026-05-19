@@ -65,6 +65,8 @@ class Main {
 
 	private class TDpt {
 		public Long x, y;
+		public int idx;
+		public boolean red = true;
 		public TDpt(Long x, Long y) {
 			this.x = x;
 			this.y = y;
@@ -73,6 +75,16 @@ class Main {
 		public TDpt(ArrayList<Long> l) {
 			this.x = l.get(0);
 			this.y = l.get(1);
+		}
+
+		public Long manhattanDistance(TDpt other) {
+			if (this.x != other.x && this.y != other.y) return null;
+			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
+		}
+
+		public TDpt next(ArrayList<TDpt> vertices) {
+			// ArrayList<TDpt> nextycloser = vertices.filter(i -> i.y == this.y);
+			return null;
 		}
 
 		@Override
@@ -148,6 +160,7 @@ class Main {
 
 
 
+
     public Long mySol(String input) {
 		ArrayList<TDpt> vertices = Arrays.stream(input.split("\n"))
 			.map(i -> Arrays.stream(i.split(","))
@@ -157,27 +170,31 @@ class Main {
 			.map(TDpt::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		vertices.sort((a, b) -> a.y.compareTo(b.y));
+		vertices.sort((a, b) -> a.x.compareTo(b.x));
 
-		// vertices.forEach(System.out::println);
+		List<TDpt> area = new ArrayList<>(vertices);
+		area.sort((a,b) -> a.manhattanDistance(b));
+		area.forEach(System.out::println);
+
+
 
 		ArrayList<Segment> bases   = collectSegments(vertices, 0);
 		ArrayList<Segment> heights = collectSegments(vertices, 1);
 		// bases.forEach(System.out::println);
-		heights.forEach(System.out::println);
+		// heights.forEach(System.out::println);
 		
 		// collect rectangles
 		ArrayList<Rectangle> internalspace = new ArrayList<Rectangle>();
-		// for (int i  = 0; i < bases.size(); i++)
-		// 	for (int j = i + 1; j < bases.size(); j++)
-		// 		internalspace.add(bases.get(i).interceptHoriz(bases.get(j)));
+		for (int i  = 0; i < bases.size(); i++)
+			for (int j = i + 1; j < bases.size(); j++)
+				internalspace.add(bases.get(i).interceptHoriz(bases.get(j)));
 
 		for (int i  = 0; i < heights.size(); i++)
 			for (int j = i + 1; j < heights.size(); j++)
 				internalspace.add(heights.get(i).interceptVert(heights.get(j)));
 
 		internalspace.removeIf(Objects::isNull);
-		internalspace.forEach(System.out::println);
+		// internalspace.forEach(System.out::println);
 		System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
