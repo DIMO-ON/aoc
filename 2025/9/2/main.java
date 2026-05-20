@@ -17,19 +17,19 @@ import java.util.Objects;
 
 class Main {
 	private class Rectangle {
-		public TDpt leftuppervertix;
-		public TDpt rightbottomvertix;
-		public TDpt leftbottomvertix;
-		public TDpt rightuppervertix;
+		public Pt2D leftuppervertix;
+		public Pt2D rightbottomvertix;
+		public Pt2D leftbottomvertix;
+		public Pt2D rightuppervertix;
 
-		public Rectangle(TDpt left, TDpt right) {
+		public Rectangle(Pt2D left, Pt2D right) {
 			this.leftuppervertix   = left;
 			this.rightbottomvertix = right;
-			this.leftbottomvertix  = new TDpt(left.x, right.y);
-			this.rightuppervertix  = new TDpt(right.x, left.y);
+			this.leftbottomvertix  = new Pt2D(left.x, right.y);
+			this.rightuppervertix  = new Pt2D(right.x, left.y);
 		}
 
-		public List<TDpt> vertices() {
+		public List<Pt2D> vertices() {
 			return Arrays.asList( 
 				leftuppervertix,
 				rightbottomvertix,
@@ -43,14 +43,14 @@ class Main {
 				.allMatch(v -> area.stream().anyMatch(r -> r != null && r.includes(v))); 
 		}
 
-		public boolean includes(TDpt p) {
+		public boolean includes(Pt2D p) {
 			return p.x.compareTo(leftuppervertix.x) >= 0 && p.x.compareTo(rightbottomvertix.x) <= 0 &&
 				   p.y.compareTo(leftuppervertix.y) >= 0 && p.y.compareTo(rightbottomvertix.y) <= 0;
 		}
 
 		public Long area() {
-			TDpt a = leftuppervertix;
-			TDpt b = rightbottomvertix;
+			Pt2D a = leftuppervertix;
+			Pt2D b = rightbottomvertix;
 			Long height = Math.abs(a.y - b.y) + 1;
 			Long base   = Math.abs(a.x - b.x) + 1;
 			return height * base;
@@ -63,27 +63,27 @@ class Main {
 		}
 	}
 
-	private class TDpt {
+	private class Pt2D {
 		public Long x, y;
 		public int idx;
 		public boolean red = true;
-		public TDpt(Long x, Long y) {
+		public Pt2D(Long x, Long y) {
 			this.x = x;
 			this.y = y;
 		}
 
-		public TDpt(ArrayList<Long> l) {
+		public Pt2D(ArrayList<Long> l) {
 			this.x = l.get(0);
 			this.y = l.get(1);
 		}
 
-		public Long manhattanDistance(TDpt other) {
+		public Long manhattanDistance(Pt2D other) {
 			if (this.x != other.x && this.y != other.y) return null;
 			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
 		}
 
-		public TDpt next(ArrayList<TDpt> vertices) {
-			// ArrayList<TDpt> nextycloser = vertices.filter(i -> i.y == this.y);
+		public Pt2D next(ArrayList<Pt2D> vertices) {
+			// ArrayList<Pt2D> nextycloser = vertices.filter(i -> i.y == this.y);
 			return null;
 		}
 
@@ -94,9 +94,9 @@ class Main {
 	}
 
 	private class Segment {
-		public TDpt a, b;
+		public Pt2D a, b;
 
-		public Segment(TDpt a, TDpt b, boolean base) {
+		public Segment(Pt2D a, Pt2D b, boolean base) {
 			if (base) {
 				this.a = a.x <= b.x? a: b;
 				this.b = a.x > b.x? a: b;
@@ -114,8 +114,8 @@ class Main {
 			if (other.a.x != other.a.x && this.a.y != other.a.y) return null;
 			if (left.a.y > right.b.y || left.b.y < right.a.y) return null;
 
-			TDpt lupper = left.a.y >= right.a.y? left.a: new TDpt(left.a.x, right.a.y);
-			TDpt rbotto = right.b.y <= left.b.y? right.b: new TDpt(right.b.x, left.b.y);
+			Pt2D lupper = left.a.y >= right.a.y? left.a: new Pt2D(left.a.x, right.a.y);
+			Pt2D rbotto = right.b.y <= left.b.y? right.b: new Pt2D(right.b.x, left.b.y);
 
 			return new Rectangle(lupper, rbotto);
 		}
@@ -128,8 +128,8 @@ class Main {
 			if (other.a.x != other.a.x && this.a.y != other.a.y) return null;
 			if (upper.a.x > lower.b.x || upper.b.x < lower.a.x) return null;
 
-			TDpt lupper = upper.a.x >= lower.a.x? upper.a: new TDpt(lower.a.x, upper.a.y);
-			TDpt rbotto = lower.b.x <= upper.b.x? lower.b: new TDpt(upper.b.x, lower.b.y);
+			Pt2D lupper = upper.a.x >= lower.a.x? upper.a: new Pt2D(lower.a.x, upper.a.y);
+			Pt2D rbotto = lower.b.x <= upper.b.x? lower.b: new Pt2D(upper.b.x, lower.b.y);
 
 			return new Rectangle(lupper, rbotto);
 		}
@@ -142,12 +142,12 @@ class Main {
 	}
 
 
-	private ArrayList<Segment> collectSegments(ArrayList<TDpt> vertices, int coordinate) {
+	private ArrayList<Segment> collectSegments(ArrayList<Pt2D> vertices, int coordinate) {
 		ArrayList<Segment> col = new ArrayList<>();
 		for (int i = 0; i < vertices.size(); i ++) {
-			TDpt a = vertices.get(i);
+			Pt2D a = vertices.get(i);
 			for (int j = i + 1; j < vertices.size(); j ++) {
-				TDpt b = vertices.get(j);
+				Pt2D b = vertices.get(j);
 				if (coordinate == 1) // horizontally aligned 
 					if (a.x.equals(b.x)) col.add(new Segment(a, b, false));
 				if (coordinate == 0) // vertically aligned 
@@ -162,19 +162,44 @@ class Main {
 
 
     public Long mySol(String input) {
-		ArrayList<TDpt> vertices = Arrays.stream(input.split("\n"))
+		ArrayList<Pt2D> vertices = Arrays.stream(input.split("\n"))
 			.map(i -> Arrays.stream(i.split(","))
 				.map(Long::parseLong)
 				.collect(Collectors.toCollection(ArrayList::new))
 			)
-			.map(TDpt::new)
+			.map(Pt2D::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
 		vertices.sort((a, b) -> a.x.compareTo(b.x));
+		vertices.sort((a, b) -> a.y.compareTo(b.y));
+		// vertices.forEach(System.out::println);
 
-		List<TDpt> area = new ArrayList<>(vertices);
-		area.sort((a,b) -> a.manhattanDistance(b));
+		
+		List<Pt2D> area = new ArrayList<>();
+		List<Pt2D> excluded = new ArrayList<>();
+		Pt2D actual = vertices.remove(0);
+
+		while (vertices.size() > 0 && area.indexOf(actual) < 0) {
+			area.add(actual);
+			int i = 0;
+			for (; i < vertices.size(); i++) {
+				if (vertices.get(i).y.compareTo(actual.y) == 0 || vertices.get(i).x.compareTo(actual.x) == 0) break;
+			};
+			if (i < vertices.size()) {
+				actual = vertices.remove(i);
+			}
+			else {
+				actual = vertices.remove(0);
+				excluded.add(actual);
+			}
+		}
 		area.forEach(System.out::println);
+
+		// area.sort((a,b) -> a.manhattanDistance(b));
+		for (Pt2D p: vertices) {
+			area.add(p);
+		}
+
 
 
 
@@ -199,17 +224,17 @@ class Main {
 
 		Long maxarea = 0l;
 
-		ArrayList<Rectangle> internalrectangles = new ArrayList<Rectangle>();
-		for (int i = 0; i < vertices.size(); i++) {
-			TDpt pointa = vertices.get(i);
-			for (int j = i + 1; j < vertices.size(); j++) {
-				TDpt pointb = vertices.get(j);
-				Rectangle actual = new Rectangle(pointa, pointb);
-				if (!actual.isInscribed(internalspace)) continue;
-				// System.out.println(actual);
-				maxarea = maxarea < actual.area()? actual.area(): maxarea;
-			}
-		}
+		// ArrayList<Rectangle> internalrectangles = new ArrayList<Rectangle>();
+		// for (int i = 0; i < vertices.size(); i++) {
+		// 	Pt2D pointa = vertices.get(i);
+		// 	for (int j = i + 1; j < vertices.size(); j++) {
+		// 		Pt2D pointb = vertices.get(j);
+		// 		Rectangle actual = new Rectangle(pointa, pointb);
+		// 		if (!actual.isInscribed(internalspace)) continue;
+		// 		// System.out.println(actual);
+		// 		maxarea = maxarea < actual.area()? actual.area(): maxarea;
+		// 	}
+		// }
 		return maxarea;
     }
 
@@ -228,7 +253,7 @@ class Main {
 
         Long totcount = 0l;
         totcount = sol.mySol(example);
-		// totcount = sol.mySol(input);
+		totcount = sol.mySol(input);
         System.out.printf("max area: %d", totcount);
     }
 }
