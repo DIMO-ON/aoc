@@ -17,59 +17,72 @@ import java.util.Objects;
 
 class Main {
 	private class Rectangle {
-		public Pt2D leftuppervertix;
-		public Pt2D rightbottomvertix;
-		public Pt2D leftbottomvertix;
-		public Pt2D rightuppervertix;
+		public Pt2D vertix1;
+		public Pt2D vertix2;
 
-		public Rectangle(Pt2D left, Pt2D right) {
-			this.leftuppervertix   = left;
-			this.rightbottomvertix = right;
-			this.leftbottomvertix  = new Pt2D(left.x, right.y);
-			this.rightuppervertix  = new Pt2D(right.x, left.y);
+		public Rectangle(Pt2D v1, Pt2D v2) {
+			this.vertix1 = v1;
+			this.vertix2 = v2;
+		}
+
+		public boolean isSegment() {
+			return vertix1.x.compareTo(vertix2.x) == 0 ||
+				   vertix1.y.compareTo(vertix2.y) == 0;
 		}
 
 		public List<Pt2D> vertices() {
+			if (this.isSegment()) {
+				return Arrays.asList( 
+					vertix1,
+					vertix2	
+					);
+			}
+
 			return Arrays.asList( 
-				leftuppervertix,
-				rightbottomvertix,
-				leftbottomvertix,
-				rightuppervertix
+				vertix1,
+				vertix2,
+				new Pt2D(vertix1.x, vertix2.y),
+				new Pt2D(vertix2.x, vertix1.y)
 				);
 		}
 		
-		public boolean isInscribed(ArrayList<Rectangle> area) {
-			return this.vertices().stream()
-				.allMatch(v -> area.stream().anyMatch(r -> r != null && r.includes(v))); 
+		public boolean isInscribed(ArrayList<Pt2D> area) {
+			return this.vertices().stream().allMatch(v -> area.contains(v));
 		}
 
-		public boolean includes(Pt2D p) {
-			return p.x.compareTo(leftuppervertix.x) >= 0 && p.x.compareTo(rightbottomvertix.x) <= 0 &&
-				   p.y.compareTo(leftuppervertix.y) >= 0 && p.y.compareTo(rightbottomvertix.y) <= 0;
-		}
+		// public boolean includes(Pt2D p) {
+		// 	return p.x.compareTo(leftuppervertix.x) >= 0 && p.x.compareTo(rightbottomvertix.x) <= 0 &&
+		// 		   p.y.compareTo(leftuppervertix.y) >= 0 && p.y.compareTo(rightbottomvertix.y) <= 0;
+		// }
+		//
+
 
 		public Long area() {
-			Pt2D a = leftuppervertix;
-			Pt2D b = rightbottomvertix;
-			Long height = Math.abs(a.y - b.y) + 1;
-			Long base   = Math.abs(a.x - b.x) + 1;
-			return height * base;
+			if (this.isSegment()) return this.vertix1.manhattanDistance(this.vertix2);
+			return (Math.abs(this.vertix1.x - this.vertix2.x) + 1) *
+				   (Math.abs(this.vertix1.y - this.vertix2.y) + 1);
 		}
 
 		@Override
 		public String toString() {
-			return "[leftupper = "   + leftuppervertix.toString() + " " +
-				   "rightbottom = " + rightbottomvertix.toString() + "] - area: " + this.area();
+			return "[vertix1 = "   + vertix1.toString() + " " + this.isSegment() + 
+				   "vertix2 = " + vertix2.toString() + "] - area: " + this.area();
 		}
 	}
 
 	private class Pt2D {
 		public Long x, y;
-		public int idx;
 		public boolean red = true;
+
 		public Pt2D(Long x, Long y) {
 			this.x = x;
 			this.y = y;
+		}
+
+		public Pt2D(Long x, Long y, boolean red) {
+			this.x = x;
+			this.y = y;
+			this.red = red;
 		}
 
 		public Pt2D(ArrayList<Long> l) {
@@ -78,7 +91,7 @@ class Main {
 		}
 
 		public Long manhattanDistance(Pt2D other) {
-			if (this.x != other.x && this.y != other.y) return null;
+			if (this.x != other.x && this.y != other.y) return 0l;
 			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
 		}
 
@@ -89,7 +102,7 @@ class Main {
 
 		@Override
 		public String toString() {
-			return "{x=" + x + ", y=" + y + "}";
+			return "{x=" + x + ", y=" + y + ", red=" + this.red + "}";
 		}
 	}
 
@@ -114,8 +127,8 @@ class Main {
 			if (other.a.x != other.a.x && this.a.y != other.a.y) return null;
 			if (left.a.y > right.b.y || left.b.y < right.a.y) return null;
 
-			Pt2D lupper = left.a.y >= right.a.y? left.a: new Pt2D(left.a.x, right.a.y);
-			Pt2D rbotto = right.b.y <= left.b.y? right.b: new Pt2D(right.b.x, left.b.y);
+			Pt2D lupper = left.a.y >= right.a.y? left.a: new Pt2D(left.a.x, right.a.y, false);
+			Pt2D rbotto = right.b.y <= left.b.y? right.b: new Pt2D(right.b.x, left.b.y, false);
 
 			return new Rectangle(lupper, rbotto);
 		}
@@ -170,71 +183,46 @@ class Main {
 			.map(Pt2D::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		vertices.sort((a, b) -> a.x.compareTo(b.x));
-		vertices.sort((a, b) -> a.y.compareTo(b.y));
+		// vertices.sort((a, b) -> a.x.compareTo(b.x));
+		// vertices.sort((a, b) -> a.y.compareTo(b.y));
 		// vertices.forEach(System.out::println);
-
-		
-		List<Pt2D> area = new ArrayList<>();
-		List<Pt2D> excluded = new ArrayList<>();
-		Pt2D actual = vertices.remove(0);
-
-		while (vertices.size() > 0 && area.indexOf(actual) < 0) {
-			area.add(actual);
-			int i = 0;
-			for (; i < vertices.size(); i++) {
-				if (vertices.get(i).y.compareTo(actual.y) == 0 || vertices.get(i).x.compareTo(actual.x) == 0) break;
-			};
-			if (i < vertices.size()) {
-				actual = vertices.remove(i);
+		ArrayList<Pt2D> perimeter = new ArrayList<>();
+		for (int i = 0; i < vertices.size(); i++) {
+			Pt2D actual = vertices.get(i);
+			perimeter.add(actual);
+			Pt2D next = vertices.get(i);
+			if (i + 1 >= vertices.size()) {
+				next = vertices.get(0);
+			} else {
+				next = vertices.get(i + 1);
 			}
-			else {
-				actual = vertices.remove(0);
-				excluded.add(actual);
+			if (actual.x.compareTo(next.x) == 0) {
+				Long cond = actual.y.compareTo(next.y) <= 0? 1l: -1l;
+				for (Long y = actual.y + cond; y.compareTo(next.y) != 0; y += cond)
+					perimeter.add(new Pt2D(actual.x, y, false));
+			} else if (actual.y.compareTo(next.y) == 0) {
+				Long cond = actual.x.compareTo(next.x) <= 0? 1l: -1l;
+				for (Long x = actual.x + cond; x.compareTo(next.x) != 0; x += cond)
+					perimeter.add(new Pt2D(x, actual.y, false));
 			}
 		}
-		area.forEach(System.out::println);
-
-		// area.sort((a,b) -> a.manhattanDistance(b));
-		for (Pt2D p: vertices) {
-			area.add(p);
-		}
-
-
-
-
-		ArrayList<Segment> bases   = collectSegments(vertices, 0);
-		ArrayList<Segment> heights = collectSegments(vertices, 1);
-		// bases.forEach(System.out::println);
-		// heights.forEach(System.out::println);
+		// perimeter.forEach(System.out::println);
 		
-		// collect rectangles
-		ArrayList<Rectangle> internalspace = new ArrayList<Rectangle>();
-		for (int i  = 0; i < bases.size(); i++)
-			for (int j = i + 1; j < bases.size(); j++)
-				internalspace.add(bases.get(i).interceptHoriz(bases.get(j)));
-
-		for (int i  = 0; i < heights.size(); i++)
-			for (int j = i + 1; j < heights.size(); j++)
-				internalspace.add(heights.get(i).interceptVert(heights.get(j)));
-
-		internalspace.removeIf(Objects::isNull);
-		// internalspace.forEach(System.out::println);
 		System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
 
-		// ArrayList<Rectangle> internalrectangles = new ArrayList<Rectangle>();
-		// for (int i = 0; i < vertices.size(); i++) {
-		// 	Pt2D pointa = vertices.get(i);
-		// 	for (int j = i + 1; j < vertices.size(); j++) {
-		// 		Pt2D pointb = vertices.get(j);
-		// 		Rectangle actual = new Rectangle(pointa, pointb);
-		// 		if (!actual.isInscribed(internalspace)) continue;
-		// 		// System.out.println(actual);
-		// 		maxarea = maxarea < actual.area()? actual.area(): maxarea;
-		// 	}
-		// }
+		for (int i = 0; i < vertices.size(); i++) {
+			Pt2D actual = vertices.get(i);
+			Pt2D next = vertices.get((i + 2) % vertices.size());
+
+			Rectangle r = new Rectangle(actual, next);
+			System.out.println(r);
+			System.out.println(r.isInscribed(perimeter));
+			if (r.isInscribed(perimeter)) maxarea = maxarea.compareTo(r.area()) < 0? r.area(): maxarea;  
+		}
+
+
 		return maxarea;
     }
 
@@ -253,7 +241,7 @@ class Main {
 
         Long totcount = 0l;
         totcount = sol.mySol(example);
-		totcount = sol.mySol(input);
+		// totcount = sol.mySol(input);
         System.out.printf("max area: %d", totcount);
     }
 }
