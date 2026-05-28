@@ -69,11 +69,17 @@ class Main {
 
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
 			ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
-			interceptions.removeIf(s -> !s.intercept(this));
-			System.out.println(this);
-			System.out.println(interceptions);
-			System.exit(0);
-			return false;
+			// System.out.println(this);
+			boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
+			// System.out.println("is included :" + isincluded);
+			if (isincluded) return true;
+			// filtra quelli intercettati
+			interceptions.removeIf(s -> !s.isVertical());
+			// System.out.println(interceptions);
+			// interceptions.forEach(s -> s.interceptVertically(this));
+			interceptions.removeIf(s -> !s.interceptVertically(this));
+			// System.out.println("intercepts " + ((interceptions.size() % 2) > 0) + "  " + interceptions);
+			return (interceptions.size() % 2) > 0;
 		}
 
 		@Override
@@ -140,8 +146,9 @@ class Main {
 		}
 		
 		public boolean isInscribed(ArrayList<Segment> outerperimeter) {
-			return this.perimeter().stream()
-				.anyMatch(v -> !v.isInscribed(outerperimeter));
+			boolean r = this.perimeter().stream()
+				.allMatch(v -> v.isInscribed(outerperimeter));
+			return r;
 		}
 
 		// public boolean includes(Pt2D p) {
@@ -171,11 +178,18 @@ class Main {
 
 		public Segment(Pt2D a, Pt2D b) {
 			assert !a.equals(b): a.toString() + " " + b.toString() + " is point, not segment";
-			this.a = a.y.compareTo(b.y) < 0? a: b;
-			this.b = a.y.compareTo(b.y) >= 0? a: b;
+	        // Order by x, then by y to have deterministic endpoints
+			if (a.x < b.x || (a.x == b.x && a.y <= b.y)) {
+				this.a = a;
+				this.b = b;
+			} else {
+				this.a = b;
+				this.b = a;
+			}
+			
 		}
 
-		public boolean areJoined(Segment o) {
+		public boolean isJoined(Segment o) {
 			return this.include(o.a) || this.include(o.b);
 		}
 
@@ -189,8 +203,10 @@ class Main {
 
 		public boolean include(Pt2D p) {
 			if (!this.isAligned()) return false;
-			return p.y.equals(a.y) && a.x.compareTo(p.x) >= 0 && b.x.compareTo(p.x) <= 0 ||
-				   p.x.equals(a.x) && a.y.compareTo(p.y) >= 0 && b.y.compareTo(p.y) <= 0;
+			boolean r = p.y.equals(a.y) && a.x.compareTo(p.x) <= 0 && b.x.compareTo(p.x) >= 0 ||
+				   p.x.equals(a.x) && a.y.compareTo(p.y) <= 0 && b.y.compareTo(p.y) >= 0;
+
+			return r;
 		}
 
 		public boolean isAligned() {
@@ -198,13 +214,11 @@ class Main {
 		}
 
 		public boolean interceptVertically(Pt2D p) {
-			System.out.println(this);
-			// System.out.println(interceptions);
-			// System.exit(0);
+			if (!this.isVertical() && !a.x.equals(p.x)) return false;
 
-			if (!a.x.equals(p.x)) return false;
-
-			return p.y.compareTo(a.y) > 0 && p.y.compareTo(b.y) <= 0;
+			boolean r = a.x.compareTo(p.x) > 0 && p.y.compareTo(a.y) > 0 && p.y.compareTo(b.y) <= 0;
+			// System.out.println(this + " interceptVertically " + p + " " + r);
+			return r;
 		}
 
 		@Override
@@ -237,59 +251,36 @@ class Main {
 			)
 			.map(Pt2D::new)
 			.collect(Collectors.toCollection(ArrayList::new));
-		// perimeter.forEach(System.out::println);
 
-		// HashSet<Pt2D> prova = new HashSet<Pt2D>();
-		// Pt2D pro = new Pt2D(1l, 2l);
-		// prova.add(pro);
-		// prova.add(new Pt2D(pro));
-		// prova.add(new Pt2D(1l, 2l));
-		// prova.add(new Pt2D(1l, 2l));
-		// prova.add(new Pt2D(1l, 2l));
-		// prova.add(new Pt2D(3l, 2l));
-		// prova.add(new Pt2D(1l, 2l));
-		// System.out.println(prova);
-		// System.exit(0);
-		
+		// filtrare dal perimetro solo i vertici (tra vertice e vertice ci possono essere altri punti)
+		List<Pt2D> vertices = IntStream.range(0, perimeter.size())
+			.filter(i -> perimeter.get(i).isVertix(perimeter, i))
+			.mapToObj(perimeter::get)
+			.collect(Collectors.toList());
+
 
 		// costruire il perimetro sotto forma di segmenti, tra vertice e vertice
-		ArrayList<Segment> tmp = new ArrayList<>();
-		int i = 0;
-		while (true) {
-			if (!tmp.isEmpty() && tmp.get(0).join(tmp.get(tmp.size() - 1))) break;
-			int j = i + 1;
-			Segment s = new Segment(perimeter.get(i), perimeter.get(j % perimeter.size())); 
-			while (s.isAligned() && !perimeter.get(j % perimeter.size()).isVertix(perimeter, j % perimeter.size()))
-				s.set(1, j++ % perimeter.size());
-
-			i = j;
-			s.set(0, perimeter.get(i % perimeter.size()));
-			for (j = i + 1; true; j++) {
-				Segment s = new Segment(perimeter.get(i), perimeter.get(jmod)); 
-				if (s.isAligned() && perimeter.get(j).isVertix(perimeter, jmod)) break;
-			}
-
-			System.out.println(tmp);
+		ArrayList<Segment> sperimeter = new ArrayList<>();
+		for (int i = 0; i < vertices.size(); i++) {
+			sperimeter.add(new Segment(vertices.get(i), vertices.get((i+1) % vertices.size())));
 		}
-		ArrayList<Segment> sperimeter = new ArrayList<>(tmp);
-		System.out.println(sperimeter);
-
-
-
-
-		// costruire tutti i possibili rettangoli
+		
+		// costruire tutti i rettangoli possibili
 		ArrayList<Rectangle> rectangles = new ArrayList<>();
 		for (int i = 0; i < perimeter.size(); i++) {
 		 	for (int j = i + 1; j < perimeter.size(); j++) {
 		 		rectangles.add(new Rectangle(perimeter.get(i), perimeter.get(j)));
 			}
 		}
-		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		// rectangles.removeIf(r -> !r.isInscribed(sperimeter));
+		rectangles.removeIf(r -> !r.isInscribed(sperimeter));
 		// rectangles.forEach(System.out::println);
+
 		
-		System.out.println(":::::::::::::::");
+		// 11,1 2,5
+		// Rectangle prova = new Rectangle(new Pt2D(11l, 1l), new Pt2D(2l, 5l));
+		// System.out.println(prova.isInscribed(sperimeter));
+		// System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
 
@@ -317,7 +308,7 @@ class Main {
 
         Long totcount = 0l;
         totcount = sol.mySol(example);
-		// totcount = sol.mySol(input);
+		totcount = sol.mySol(input);
         System.out.printf("max area: %d", totcount);
     }
 }
