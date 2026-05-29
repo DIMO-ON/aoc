@@ -58,8 +58,8 @@ class Main {
 			Pt2D prev = perimeter.get(Math.floorMod(i - 1, perimeter.size()));
 			Pt2D next = perimeter.get((i + 1) % perimeter.size());
 
-			return prev.y == this.y && next.y != this.y ||
-				   prev.y != this.y && next.y == this.y; 
+			return prev.y.equals(this.y) && !next.y.equals(this.y) ||
+				   !prev.y.equals(this.y) && next.y.equals(this.y); 
 		}
 
 		public Long manhattanDistance(Pt2D other) {
@@ -74,7 +74,7 @@ class Main {
 			// System.out.println("is included :" + isincluded);
 			if (isincluded) return true;
 			// filtra quelli intercettati
-			interceptions.removeIf(s -> !s.isVertical());
+			// interceptions.removeIf(s -> !s.isVertical());
 			// System.out.println(interceptions);
 			// interceptions.forEach(s -> s.interceptVertically(this));
 			interceptions.removeIf(s -> !s.interceptVertically(this));
@@ -93,13 +93,23 @@ class Main {
 		public Pt2D vertix2;
 
 		public Rectangle(Pt2D v1, Pt2D v2) {
-			this.vertix1 = v1;
-			this.vertix2 = v2;
+			this.vertix1 = v1.compareTo(v2) <= 0? v1: v2;
+			this.vertix2 = v2.compareTo(v1) <= 0? v1: v2;
 		}
 
 		public boolean isSegment() {
 			return vertix1.x.compareTo(vertix2.x) == 0 ||
 				   vertix1.y.compareTo(vertix2.y) == 0;
+		}
+
+		public ArrayList<Segment> sides() {
+			ArrayList<Segment> sides = new ArrayList<>();
+			ArrayList<Pt2D> vertices = this.vertices();
+			for (int i = 0; i < vertices.size(); i++) {
+				Segment side = new Segment(vertices.get(i), vertices.get((i + 1) % vertices.size()));
+				sides.add(side);
+			}
+			return sides;
 		}
 		
 		public ArrayList<Pt2D> perimeter() {
@@ -129,20 +139,20 @@ class Main {
 			return new ArrayList<>(perimeter);
 		}
 
-		public List<Pt2D> vertices() {
+		public ArrayList<Pt2D> vertices() {
 			if (this.isSegment()) {
-				return Arrays.asList( 
+				return new ArrayList<Pt2D>(Arrays.asList( 
 					vertix1,
 					vertix2	
-					);
+					));
 			}
 
-			return Arrays.asList( 
+			return new ArrayList<Pt2D>(Arrays.asList( 
 				vertix1,
+				new Pt2D(vertix2.x, vertix1.y),
 				vertix2,
-				new Pt2D(vertix1.x, vertix2.y),
-				new Pt2D(vertix2.x, vertix1.y)
-				);
+				new Pt2D(vertix1.x, vertix2.y)
+				));
 		}
 		
 		public boolean isInscribed(ArrayList<Segment> outerperimeter) {
@@ -258,13 +268,17 @@ class Main {
 			.mapToObj(perimeter::get)
 			.collect(Collectors.toList());
 
+		System.out.println("vertices: " + vertices.size());
+		// System.out.println("vertices: " + vertices);
+		// System.exit(0);
+
 
 		// costruire il perimetro sotto forma di segmenti, tra vertice e vertice
-		ArrayList<Segment> sperimeter = new ArrayList<>();
+		ArrayList<Segment> sides = new ArrayList<>();
 		for (int i = 0; i < vertices.size(); i++) {
-			sperimeter.add(new Segment(vertices.get(i), vertices.get((i+1) % vertices.size())));
+			sides.add(new Segment(vertices.get(i), vertices.get((i+1) % vertices.size())));
 		}
-		
+
 		// costruire tutti i rettangoli possibili
 		ArrayList<Rectangle> rectangles = new ArrayList<>();
 		for (int i = 0; i < perimeter.size(); i++) {
@@ -272,15 +286,22 @@ class Main {
 		 		rectangles.add(new Rectangle(perimeter.get(i), perimeter.get(j)));
 			}
 		}
+		System.out.println("rectangles: " + rectangles.size());
+		// rectangles.forEach(r -> r.sides().size());
+		// rectangles.forEach(r -> System.out.println(r.perimeter().size()));
+		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		rectangles.removeIf(r -> !r.isInscribed(sperimeter));
+		rectangles.removeIf(r -> !r.isInscribed(sides));
+		// System.out.println("inscribed rectangles: " + rectangles.size());
 		// rectangles.forEach(System.out::println);
 
 		
 		// 11,1 2,5
 		// Rectangle prova = new Rectangle(new Pt2D(11l, 1l), new Pt2D(2l, 5l));
-		// System.out.println(prova.isInscribed(sperimeter));
-		// System.out.println(":::::::::::::::");
+		// prova.perimeter().forEach(System.out::println);
+		// System.out.println(prova);
+		// System.out.println(prova.isInscribed(sides));
+		System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
 
@@ -308,7 +329,8 @@ class Main {
 
         Long totcount = 0l;
         totcount = sol.mySol(example);
+        System.out.printf("max area: %d\n\n", totcount);
 		totcount = sol.mySol(input);
-        System.out.printf("max area: %d", totcount);
+        System.out.printf("\nmax area: %d\n", totcount);
     }
 }
