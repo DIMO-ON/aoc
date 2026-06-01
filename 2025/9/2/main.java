@@ -63,24 +63,16 @@ class Main {
 		}
 
 		public Long manhattanDistance(Pt2D other) {
-			if (this.x != other.x && this.y != other.y) return 0l;
 			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
 		}
 
-		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
-			ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
-			// System.out.println(this);
-			boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
-			// System.out.println("is included :" + isincluded);
-			if (isincluded) return true;
-			// filtra quelli intercettati
-			// interceptions.removeIf(s -> !s.isVertical());
-			// System.out.println(interceptions);
-			// interceptions.forEach(s -> s.interceptVertically(this));
-			interceptions.removeIf(s -> !s.interceptVertically(this));
-			// System.out.println("intercepts " + ((interceptions.size() % 2) > 0) + "  " + interceptions);
-			return (interceptions.size() % 2) > 0;
-		}
+		// public boolean isInscribed(ArrayList<Segment> souterperimeter) {
+		// 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
+		// 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
+		// 	if (isincluded) return true;
+		// 	interceptions.removeIf(s -> !s.interceptVertically(this));
+		// 	return (interceptions.size() % 2) > 0;
+		// }
 
 		@Override
 		public String toString() {
@@ -156,17 +148,12 @@ class Main {
 		}
 		
 		public boolean isInscribed(ArrayList<Segment> outerperimeter) {
-			boolean r = this.perimeter().stream()
-				.allMatch(v -> v.isInscribed(outerperimeter));
+			// boolean r = this.vertices().stream()
+			// boolean r = this.perimeter().stream()
+			boolean r = this.sides().stream()
+				.allMatch(s -> s.isInscribed(outerperimeter));
 			return r;
 		}
-
-		// public boolean includes(Pt2D p) {
-		// 	return p.x.compareTo(leftuppervertix.x) >= 0 && p.x.compareTo(rightbottomvertix.x) <= 0 &&
-		// 		   p.y.compareTo(leftuppervertix.y) >= 0 && p.y.compareTo(rightbottomvertix.y) <= 0;
-		// }
-		//
-
 
 		public Long area() {
 			if (this.isSegment()) return this.vertix1.manhattanDistance(this.vertix2);
@@ -199,46 +186,61 @@ class Main {
 			
 		}
 
-		public boolean isJoined(Segment o) {
-			return this.include(o.a) || this.include(o.b);
+		public boolean isConsecutiveTo(Segment o) {
+			if (this.isVertical())
+				return o.a.y.equals(o.b.y) || o.b.y.equals(o.a.y);
+			return o.a.x.equals(o.b.x) || o.b.x.equals(o.a.x);
+		}
+		
+		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
+			boolean isincluded = souterperimeter.stream().anyMatch(s -> s.equals(this));
+			System.out.println(this + "is included :" + isincluded);
+			if (isincluded) return true;
+			// ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
+			ArrayList<Segment> interceptions = new ArrayList<>();
+			// filtra quelli intercettati
+
+			for (Segment s: souterperimeter) {
+				if (this.isVertical() && !s.isVertical()) continue;
+				boolean cond = this.rayCollide(s);
+				System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
+				if (!this.rayCollide(s)) continue;
+				if (!interceptions.isEmpty())
+					if (s.isConsecutiveTo(interceptions.get(interceptions.size() - 1)))
+						continue;
+				interceptions.add(s);
+			}
+			// interceptions.removeIf(s -> !s.isVertical());
+			// System.out.println(interceptions);
+			// interceptions.forEach(s -> s.interceptVertically(this));
+			// interceptions.removeIf(s -> !s.intercept(this));
+			System.out.println("intercepts " + ((interceptions.size() % 2) > 0) + "  " + interceptions);
+			return (interceptions.size() % 2) > 0;
 		}
 
-		public void set(int pt, Pt2D newpt) {
-			if (pt == 0) a = newpt;
-			if (pt == 1) b = newpt;
-			assert !a.equals(b): a.toString() + " " + b.toString() + " is point, not segment";
+		public boolean equals(Segment o) {
+			return this.a.equals(o.a) && this.b.equals(o.b);
 		}
 
-
-
-		public boolean include(Pt2D p) {
-			if (!this.isAligned()) return false;
-			boolean r = p.y.equals(a.y) && a.x.compareTo(p.x) <= 0 && b.x.compareTo(p.x) >= 0 ||
-				   p.x.equals(a.x) && a.y.compareTo(p.y) <= 0 && b.y.compareTo(p.y) >= 0;
-
-			return r;
-		}
 
 		public boolean isAligned() {
 			return a.x.equals(b.x) || a.y.equals(b.y);
 		}
 
-		public boolean interceptVertically(Pt2D p) {
-			if (!this.isVertical() && !a.x.equals(p.x)) return false;
-
-			boolean r = a.x.compareTo(p.x) > 0 && p.y.compareTo(a.y) > 0 && p.y.compareTo(b.y) <= 0;
-			// System.out.println(this + " interceptVertically " + p + " " + r);
-			return r;
+		public boolean rayCollide(Segment o) {
+			if (o.isVertical() != this.isVertical()) return false;
+			if (!this.isVertical()) {
+				if (this.a.y.compareTo(o.a.y) >= 0) return false;
+				return !(o.a.x.compareTo(this.b.x) > 0 || o.b.x.compareTo(this.a.x) < 0);
+			}
+			if (this.a.x.compareTo(o.a.x) >= 0) return false;
+			return !(o.a.y.compareTo(this.b.y) > 0 || o.b.y.compareTo(this.a.y) < 0);
 		}
 
 		@Override
 		public int compareTo(Segment o) {
 			if (this.equals(o)) return 0;
 			return -1;
-		}
-
-		public boolean equals(Segment o) {
-			return this.a.equals(o.a) && this.b.equals(o.b);
 		}
 
 		public boolean isVertical() {
@@ -269,14 +271,13 @@ class Main {
 			.collect(Collectors.toList());
 
 		System.out.println("vertices: " + vertices.size());
-		// System.out.println("vertices: " + vertices);
-		// System.exit(0);
 
 
 		// costruire il perimetro sotto forma di segmenti, tra vertice e vertice
 		ArrayList<Segment> sides = new ArrayList<>();
 		for (int i = 0; i < vertices.size(); i++) {
-			sides.add(new Segment(vertices.get(i), vertices.get((i+1) % vertices.size())));
+			Segment s = new Segment(vertices.get(i), vertices.get((i+1) % vertices.size()));
+			sides.add(s);
 		}
 
 		// costruire tutti i rettangoli possibili
@@ -291,17 +292,20 @@ class Main {
 		// rectangles.forEach(r -> System.out.println(r.perimeter().size()));
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		rectangles.removeIf(r -> !r.isInscribed(sides));
-		// System.out.println("inscribed rectangles: " + rectangles.size());
+		// rectangles.removeIf(r -> !r.isInscribed(sides));
+		System.out.println("inscribed rectangles: " + rectangles.size());
 		// rectangles.forEach(System.out::println);
 
 		
-		// 11,1 2,5
-		// Rectangle prova = new Rectangle(new Pt2D(11l, 1l), new Pt2D(2l, 5l));
-		// prova.perimeter().forEach(System.out::println);
+		// 7,1 11,7
+		// Rectangle prova = new Rectangle(new Pt2D(7l, 1l), new Pt2D(11l, 7l));
+		Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
+		// System.out.println("sides:");
+		// prova.sides().forEach(System.out::println);
 		// System.out.println(prova);
-		// System.out.println(prova.isInscribed(sides));
-		System.out.println(":::::::::::::::");
+		System.out.println("is inscribed:");
+		System.out.println(prova.isInscribed(sides));
+		// System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
 
@@ -315,22 +319,12 @@ class Main {
     public static void main(String[] args) throws IOException {
         Main sol = new Main();
 		String input = Files.readString(Path.of("2025/9/input.txt"));
-        String example = "";
-		example += "7,1\n";
-		example += "11,1\n";
-		example += "11,4\n";
-		example += "11,7\n";
-		example += "9,7\n";
-		example += "9,5\n";
-		example += "2,5\n";
-		example += "2,3\n";
-		example += "7,3\n";
-
+		String example = Files.readString(Path.of("2025/9/example.txt"));
 
         Long totcount = 0l;
         totcount = sol.mySol(example);
         System.out.printf("max area: %d\n\n", totcount);
-		totcount = sol.mySol(input);
-        System.out.printf("\nmax area: %d\n", totcount);
+		// totcount = sol.mySol(input);
+        System.out.printf("max area: %d\n", totcount);
     }
 }
