@@ -188,13 +188,13 @@ class Main {
 
 		public boolean isConsecutiveTo(Segment o) {
 			if (this.isVertical())
-				return o.a.y.equals(o.b.y) || o.b.y.equals(o.a.y);
-			return o.a.x.equals(o.b.x) || o.b.x.equals(o.a.x);
+				return this.a.y.equals(o.b.y) || this.b.y.equals(o.a.y);
+			return this.a.x.equals(o.b.x) || this.b.x.equals(o.a.x);
 		}
 		
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
 			boolean isincluded = souterperimeter.stream().anyMatch(s -> s.equals(this));
-			System.out.println(this + "is included :" + isincluded);
+			// System.out.println(this + "is included :" + isincluded);
 			if (isincluded) return true;
 			// ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
 			ArrayList<Segment> interceptions = new ArrayList<>();
@@ -202,8 +202,8 @@ class Main {
 
 			for (Segment s: souterperimeter) {
 				if (this.isVertical() && !s.isVertical()) continue;
-				boolean cond = this.rayCollide(s);
-				System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
+				// boolean cond = this.rayCollide(s);
+				// System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
 				if (!this.rayCollide(s)) continue;
 				if (!interceptions.isEmpty())
 					if (s.isConsecutiveTo(interceptions.get(interceptions.size() - 1)))
@@ -214,7 +214,7 @@ class Main {
 			// System.out.println(interceptions);
 			// interceptions.forEach(s -> s.interceptVertically(this));
 			// interceptions.removeIf(s -> !s.intercept(this));
-			System.out.println("intercepts " + ((interceptions.size() % 2) > 0) + "  " + interceptions);
+			// System.out.println("intercepts " + ((interceptions.size() % 2) > 0) + "  " + interceptions);
 			return (interceptions.size() % 2) > 0;
 		}
 
@@ -292,19 +292,19 @@ class Main {
 		// rectangles.forEach(r -> System.out.println(r.perimeter().size()));
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		// rectangles.removeIf(r -> !r.isInscribed(sides));
+		rectangles.removeIf(r -> !r.isInscribed(sides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
-		// rectangles.forEach(System.out::println);
+		rectangles.forEach(System.out::println);
 
 		
 		// 7,1 11,7
 		// Rectangle prova = new Rectangle(new Pt2D(7l, 1l), new Pt2D(11l, 7l));
-		Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
+		// Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
 		// System.out.println("sides:");
 		// prova.sides().forEach(System.out::println);
 		// System.out.println(prova);
-		System.out.println("is inscribed:");
-		System.out.println(prova.isInscribed(sides));
+		// System.out.println("is inscribed:");
+		// System.out.println(prova.isInscribed(sides));
 		// System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
