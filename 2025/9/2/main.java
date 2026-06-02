@@ -208,7 +208,7 @@ class Main {
 		
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
 			boolean isincluded = souterperimeter.stream().anyMatch(s -> s.include(this));
-			System.out.println(this + "is included :" + isincluded);
+			// System.out.println(this + "is included :" + isincluded);
 			if (isincluded) return true;
 			ArrayList<Segment> interceptions = new ArrayList<>();
 			// verticali: da sinistra verso destra
@@ -216,9 +216,10 @@ class Main {
 
             int count = 0;
 			for (Segment s: souterperimeter) {
+                // trova i segmenti del perimetro che si sovrappongono
 				if (this.isVertical() && !s.isVertical()) continue;
-				boolean cond = this.rayCollide(s);
-				System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
+				boolean cond = this.collide(s);
+				// System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
 				if (!this.rayCollide(s)) continue;
 				if (!interceptions.isEmpty()) {
 					if (!s.isConsecutiveTo(interceptions.get(interceptions.size() - 1)))
@@ -293,7 +294,11 @@ class Main {
 			Segment s = new Segment(vertices.get(i), vertices.get((i+1) % vertices.size()));
 			sides.add(s);
 		}
-        sides.forEach(System.out::println);
+        // sides.forEach(System.out::println);
+
+        // perimetro lati orizzontali
+        ArrayList<Segment> horsides = sides.stream().filter(s->isVertical()).map(Segment::).collect(List);
+        // perimetro lati verticali 
 
 		// costruire tutti i rettangoli possibili
 		ArrayList<Rectangle> rectangles = new ArrayList<>();
@@ -349,8 +354,8 @@ class Main {
 		String example = Files.readString(Path.of("2025/9/example.txt"));
 		String example2 = Files.readString(Path.of("2025/9/example2.txt"));
 
-        // System.out.printf("max area: %d\n\n", sol.mySol(example));
-        System.out.printf("max area: %d\n\n", sol.mySol(example2));
+        System.out.printf("max area: %d\n\n", sol.mySol(example));
+        // System.out.printf("max area: %d\n\n", sol.mySol(example2));
         // System.out.printf("max area: %d\n", sol.mySol(input));
     }
 }
