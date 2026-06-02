@@ -63,7 +63,7 @@ class Main {
 		}
 
 		public Long manhattanDistance(Pt2D other) {
-			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
+			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y) + 1;
 		}
 
 		// public boolean isInscribed(ArrayList<Segment> souterperimeter) {
@@ -187,35 +187,49 @@ class Main {
 		}
 
 		public boolean isConsecutiveTo(Segment o) {
+            if (this.isVertical() != o.isVertical()) return false;
 			if (this.isVertical())
 				return this.a.y.equals(o.b.y) || this.b.y.equals(o.a.y);
 			return this.a.x.equals(o.b.x) || this.b.x.equals(o.a.x);
 		}
+
+        public boolean include(Segment o) {
+            if (this.equals(o)) return true;
+            if (this.isVertical() != o.isVertical()) return false;
+            if (!this.a.equals(o.a.x) && !this.a.y.equals(o.a.y)) return false;
+            if (!this.isVertical())
+                return this.a.y.equals(o.a.y) && 
+                       this.a.x.compareTo(o.a.x) <= 0 &&
+                       this.b.x.compareTo(o.b.x) >= 0;
+            return this.a.x.equals(o.a.x) && 
+                   this.a.y.compareTo(o.a.y) <= 0 &&
+                   this.b.y.compareTo(o.b.y) >= 0;
+        }
 		
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
-			boolean isincluded = souterperimeter.stream().anyMatch(s -> s.equals(this));
-			// System.out.println(this + "is included :" + isincluded);
+			boolean isincluded = souterperimeter.stream().anyMatch(s -> s.include(this));
+			System.out.println(this + "is included :" + isincluded);
 			if (isincluded) return true;
-			// ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
 			ArrayList<Segment> interceptions = new ArrayList<>();
-			// filtra quelli intercettati
+			// verticali: da sinistra verso destra
+			// orizzontali: da basso verso alto 
 
+            int count = 0;
 			for (Segment s: souterperimeter) {
 				if (this.isVertical() && !s.isVertical()) continue;
-				// boolean cond = this.rayCollide(s);
-				// System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
+				boolean cond = this.rayCollide(s);
+				System.out.println(this + " " + this.isVertical() + " collide with " + s + cond);
 				if (!this.rayCollide(s)) continue;
-				if (!interceptions.isEmpty())
-					if (s.isConsecutiveTo(interceptions.get(interceptions.size() - 1)))
-						continue;
+				if (!interceptions.isEmpty()) {
+					if (!s.isConsecutiveTo(interceptions.get(interceptions.size() - 1)))
+                       count += 1; 
+                }
+                else count += 1;
+
 				interceptions.add(s);
 			}
-			// interceptions.removeIf(s -> !s.isVertical());
-			// System.out.println(interceptions);
-			// interceptions.forEach(s -> s.interceptVertically(this));
-			// interceptions.removeIf(s -> !s.intercept(this));
-			// System.out.println("intercepts " + ((interceptions.size() % 2) > 0) + "  " + interceptions);
-			return (interceptions.size() % 2) > 0;
+			System.out.println("intercepts " + (count > 0) + "  " + interceptions);
+			return (count % 2) > 0;
 		}
 
 		public boolean equals(Segment o) {
@@ -229,12 +243,12 @@ class Main {
 
 		public boolean rayCollide(Segment o) {
 			if (o.isVertical() != this.isVertical()) return false;
-			if (!this.isVertical()) {
-				if (this.a.y.compareTo(o.a.y) >= 0) return false;
-				return !(o.a.x.compareTo(this.b.x) > 0 || o.b.x.compareTo(this.a.x) < 0);
+			if (this.isVertical()) {
+			    if (this.a.x.compareTo(o.a.x) >= 0) return false;
+			    return !(o.a.y.compareTo(this.b.y) > 0 || o.b.y.compareTo(this.a.y) < 0);
 			}
-			if (this.a.x.compareTo(o.a.x) >= 0) return false;
-			return !(o.a.y.compareTo(this.b.y) > 0 || o.b.y.compareTo(this.a.y) < 0);
+            if (this.a.y.compareTo(o.a.y) >= 0) return false;
+            return !(o.a.x.compareTo(this.b.x) > 0 || o.b.x.compareTo(this.a.x) < 0);
 		}
 
 		@Override
@@ -270,7 +284,7 @@ class Main {
 			.mapToObj(perimeter::get)
 			.collect(Collectors.toList());
 
-		System.out.println("vertices: " + vertices.size());
+		// System.out.println("vertices: " + vertices.size());
 
 
 		// costruire il perimetro sotto forma di segmenti, tra vertice e vertice
@@ -279,6 +293,7 @@ class Main {
 			Segment s = new Segment(vertices.get(i), vertices.get((i+1) % vertices.size()));
 			sides.add(s);
 		}
+        sides.forEach(System.out::println);
 
 		// costruire tutti i rettangoli possibili
 		ArrayList<Rectangle> rectangles = new ArrayList<>();
@@ -292,20 +307,32 @@ class Main {
 		// rectangles.forEach(r -> System.out.println(r.perimeter().size()));
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		rectangles.removeIf(r -> !r.isInscribed(sides));
+		// rectangles.forEach(System.out::println);
+		// rectangles.removeIf(r -> !r.isInscribed(sides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
-		rectangles.forEach(System.out::println);
+		// rectangles.forEach(System.out::println);
 
 		
-		// 7,1 11,7
+		System.out.println(":::::PROVA:::::");
+        // Pt2D a = new Pt2D(9l, 7l);
+        // Pt2D b = new Pt2D(9l, 5l);
+        // Pt2D c = new Pt2D(11l, 1l);
+        // Pt2D d = new Pt2D(11l, 7l);
+        // Segment s1 = new Segment(a,b);
+        // Segment s2 = new Segment(c,d);
+        Pt2D a = new Pt2D(1l, 1l);
+        Pt2D b = new Pt2D(1l, 1l);
+        // System.out.println(s1.isVertical());
+        // System.out.println(s2.isVertical());
+        // System.out.println(s1.isConsecutiveTo(s2));
 		// Rectangle prova = new Rectangle(new Pt2D(7l, 1l), new Pt2D(11l, 7l));
 		// Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
-		// System.out.println("sides:");
-		// prova.sides().forEach(System.out::println);
-		// System.out.println(prova);
-		// System.out.println("is inscribed:");
-		// System.out.println(prova.isInscribed(sides));
-		// System.out.println(":::::::::::::::");
+		// Rectangle prova = new Rectangle(new Pt2D(9l, 7l), new Pt2D(11l, 1l));
+		// Rectangle prova = new Rectangle(new Pt2D(7l, 3l), new Pt2D(11l, 1l));
+		Rectangle prova = new Rectangle(new Pt2D(1l, 0l), new Pt2D(4l, 4l));
+		System.out.println(prova);
+		System.out.println("is inscribed:" + prova.isInscribed(sides));
+		System.out.println(":::::::::::::::");
 
 		Long maxarea = 0l;
 
@@ -320,11 +347,10 @@ class Main {
         Main sol = new Main();
 		String input = Files.readString(Path.of("2025/9/input.txt"));
 		String example = Files.readString(Path.of("2025/9/example.txt"));
+		String example2 = Files.readString(Path.of("2025/9/example2.txt"));
 
-        Long totcount = 0l;
-        totcount = sol.mySol(example);
-        System.out.printf("max area: %d\n\n", totcount);
-		// totcount = sol.mySol(input);
-        System.out.printf("max area: %d\n", totcount);
+        // System.out.printf("max area: %d\n\n", sol.mySol(example));
+        System.out.printf("max area: %d\n\n", sol.mySol(example2));
+        // System.out.printf("max area: %d\n", sol.mySol(input));
     }
 }
