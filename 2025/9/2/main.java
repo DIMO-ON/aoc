@@ -229,7 +229,8 @@ class Main {
 			int i = start;
 			for (; i < polygon.size(); i++) {
 				Segment side = polygon.get(i);
-				if (side.intercept(this)) break;
+				// if (side.intercept(this)) break;
+				if (this.intercept(side)) break;
 			}
 
 			Map<Segment, Integer> result = new HashMap<>();
@@ -242,29 +243,39 @@ class Main {
 			Segment cut    = this.cutInterception(side);
 			Segment before = new Segment(this.a, cut.a);
 			Segment after  = new Segment(this.b, cut.b);
-			System.out.println(this);
-			System.out.println(side);
-			System.out.println(cut);
-			System.out.println(before);
-			System.out.println(after);
+			// System.out.println(this);
+			// System.out.println(side);
+			// System.out.println(cut);
+			// System.out.println(before);
+			// System.out.println(after);
 			// System.exit(0);
 
-			Map<Segment,Integer> cutfractions = cut.fract(polygon, i + 1);
-			cutfractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
-			System.out.println(cutfractions);
-			System.exit(0);
+			if (!cut.isPoint()) {
+			// if (true) {
+				if (side.include(cut)) {
+					result.put(cut, 1);
+				} else {
+					Map<Segment,Integer> cutfractions = cut.fract(polygon, i + 1);
+					cutfractions.replaceAll((seg,c) -> c + 1);
+					cutfractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
+				}
+				// System.out.println(cutfractions);
+			}
 
-			Map<Segment,Integer> beforefractions = before.fract(polygon, i + 1);
-			beforefractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
+			if (!before.isPoint()) {
+			// if (true) {
+				Map<Segment,Integer> beforefractions = before.fract(polygon, i);
+				beforefractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
+			}
 			
-			Map<Segment,Integer> afterfractions = after.fract(polygon, i + 1);
-			afterfractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
+			if (!after.isPoint()) {
+			// if (true) {
+				Map<Segment,Integer> afterfractions = after.fract(polygon, i);
+				afterfractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
+			}
 
-			// if (!s1.isPoint()) r.addAll(s1.fract(polygon, i + 1));
-			// if (!s2.isPoint()) r.addAll(s2.fract(polygon, i + 1));
-			// for pair in r: pair.value += 1
-
-			result.replaceAll((seg,c) -> c + 1);
+			// result.replaceAll((seg,c) -> c + 1);
+			// System.out.println(this + ": \n" + result);
 
 			return result;
 		}
@@ -276,9 +287,10 @@ class Main {
 				if (polygon.get(i).isAfter(this)) break;
 			
 			Map<Segment, Integer> fractions = this.fract(polygon, i);
+			// fractions.forEach((s, j) -> System.out.println(s + " " + j));
 
 			return fractions.values().stream()
-				.allMatch(v -> Math.floorMod(v, 2) == 0);
+				.allMatch(v -> Math.floorMod(v, 2) > 0);
 		}
 
 		public boolean equals(Segment o) {
@@ -384,20 +396,20 @@ class Main {
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
 		// rectangles.forEach(System.out::println);
-		rectangles.removeIf(r -> !r.isInscribed(horsides, versides));
+		// rectangles.removeIf(r -> r.isInscribed(horsides, versides));
+		rectangles.removeIf(r -> r.isSegment() || !r.isInscribed(horsides, versides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
 		rectangles.forEach(System.out::println);
 
 		
 		System.out.println(":::::PROVA:::::");
 		// Rectangle prova = new Rectangle(new Pt2D(7l, 1l), new Pt2D(11l, 7l));
-		Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
+		// Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
 		// Rectangle prova = new Rectangle(new Pt2D(9l, 7l), new Pt2D(11l, 1l));
-		// Rectangle prova = new Rectangle(new Pt2D(7l, 3l), new Pt2D(11l, 1l));
+		Rectangle prova = new Rectangle(new Pt2D(7l, 3l), new Pt2D(11l, 1l));
 		// Rectangle prova = new Rectangle(new Pt2D(1l, 0l), new Pt2D(4l, 4l));
-		// Segment prova = new Segment(new Pt2D(7l, 3l), new Pt2D(11l, 3l));
-		// System.out.println(prova);
 		System.out.println("is inscribed:" + prova.isInscribed(horsides, versides));
+		// Segment prova = new Segment(new Pt2D(7l, 3l), new Pt2D(11l, 3l));
 		// System.out.println("is inscribed:" + prova.isInscribed(horsides));
 		System.out.println(":::::::::::::::");
 
@@ -418,6 +430,6 @@ class Main {
 
         System.out.printf("max area: %d\n\n", sol.mySol(example));
         // System.out.printf("max area: %d\n\n", sol.mySol(example2));
-        // System.out.printf("max area: %d\n", sol.mySol(input));
+        System.out.printf("max area: %d\n", sol.mySol(input));
     }
 }
