@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.lang.Math;
 import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.Set;
 import java.util.Objects;
 import java.util.Map;
@@ -68,13 +69,13 @@ class Main {
 			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y) + 1;
 		}
 
-		// public boolean isInscribed(ArrayList<Segment> souterperimeter) {
-		// 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
-		// 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
-		// 	if (isincluded) return true;
-		// 	interceptions.removeIf(s -> !s.interceptVertically(this));
-		// 	return (interceptions.size() % 2) > 0;
-		// }
+		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
+		 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
+		 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
+		 	if (isincluded) return true;
+		 	interceptions.removeIf(s -> !s.rayCast(this));
+		 	return (interceptions.size() % 2) > 0;
+		}
 
 		@Override
 		public String toString() {
@@ -149,13 +150,14 @@ class Main {
 				));
 		}
 		
-		public boolean isInscribed(ArrayList<Segment> horsidespol, ArrayList<Segment> versidespol) {
+		public boolean isInscribed(ArrayList<Segment> polygon) {
 			// if (this.isSegment()) return false;
-			return this.sides().stream()
-				.allMatch(s -> {
-					if (s.isVertical()) return s.isInscribed(versidespol);
-					return s.isInscribed(horsidespol);
-				});
+			// return this.sides().stream()
+			return this.perimeter().stream()
+				.allMatch(p -> p.isInscribed(polygon));
+			// 		if (s.isVertical()) return s.isInscribed(versidespol);
+			// 		return s.isInscribed(horsidespol);
+			// 	});
 		}
 
 		public Long area() {
@@ -190,11 +192,28 @@ class Main {
 		}
 
 
+		public boolean rayCast(Pt2D p) {
+			if (this.isPoint()) return a.y.equals(p.y);
+			return this.isVertical() && 
+				this.a.x > p.x &&
+				this.a.y < p.y &&
+				this.b.y >= p.y;
+		}
+
+
 		public boolean isConsecutiveTo(Segment o) {
             if (this.isVertical() != o.isVertical()) return false;
 			if (this.isVertical())
 				return this.a.y.equals(o.b.y) || this.b.y.equals(o.a.y);
 			return this.a.x.equals(o.b.x) || this.b.x.equals(o.a.x);
+		}
+
+        public boolean include(Pt2D p) {
+			if (this.isVertical()) 
+				return a.y.compareTo(p.y) <= 0 && b.y.compareTo(p.y) >= 0;
+
+			return a.x.compareTo(p.x) <= 0 && b.x.compareTo(p.x) >= 0;
+
 		}
 
         public boolean include(Segment o) {
@@ -219,79 +238,7 @@ class Main {
 		public boolean isPoint() {
 			return a.equals(b);
 		}
-
-
-		public Map<Segment, Integer> fract(ArrayList<Segment> polygon, int start) {
-			// where polygon is made of either vertical if this.isVertical or horizontal if this is horizontal
-			// this is a Segment
-			// System.out.println(this);
-			// System.exit(0);
-			int i = start;
-			for (; i < polygon.size(); i++) {
-				Segment side = polygon.get(i);
-				// if (side.intercept(this)) break;
-				if (this.intercept(side)) break;
-			}
-
-			Map<Segment, Integer> result = new HashMap<>();
-			if (i >= polygon.size()) {
-				result.put(this, 0);
-				return result;
-			}
-
-			Segment side   = polygon.get(i);
-			Segment cut    = this.cutInterception(side);
-			Segment before = new Segment(this.a, cut.a);
-			Segment after  = new Segment(this.b, cut.b);
-			// System.out.println(this);
-			// System.out.println(side);
-			// System.out.println(cut);
-			// System.out.println(before);
-			// System.out.println(after);
-			// System.exit(0);
-
-			if (!cut.isPoint()) {
-			// if (true) {
-				if (side.include(cut)) {
-					result.put(cut, 1);
-				} else {
-					Map<Segment,Integer> cutfractions = cut.fract(polygon, i + 1);
-					cutfractions.replaceAll((seg,c) -> c + 1);
-					cutfractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
-				}
-				// System.out.println(cutfractions);
-			}
-
-			if (!before.isPoint()) {
-			// if (true) {
-				Map<Segment,Integer> beforefractions = before.fract(polygon, i);
-				beforefractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
-			}
-			
-			if (!after.isPoint()) {
-			// if (true) {
-				Map<Segment,Integer> afterfractions = after.fract(polygon, i);
-				afterfractions.forEach((seg,c) -> result.merge(seg, c, Integer::sum));
-			}
-
-			// result.replaceAll((seg,c) -> c + 1);
-			// System.out.println(this + ": \n" + result);
-
-			return result;
-		}
-
 		
-		public boolean isInscribed(ArrayList<Segment> polygon) {
-			int i = 0;
-			for (; i < polygon.size(); i++)
-				if (polygon.get(i).isAfter(this)) break;
-			
-			Map<Segment, Integer> fractions = this.fract(polygon, i);
-			// fractions.forEach((s, j) -> System.out.println(s + " " + j));
-
-			return fractions.values().stream()
-				.allMatch(v -> Math.floorMod(v, 2) > 0);
-		}
 
 		public boolean equals(Segment o) {
 			return this.a.equals(o.a) && this.b.equals(o.b);
@@ -342,9 +289,30 @@ class Main {
 		}
 	}
 
+	public Map<Pt2D, Pt2D> coordCompression(ArrayList<Pt2D> pts) {
+		ArrayList<Long> xset = new ArrayList<>(pts.stream()
+			.map(p -> p.x)
+			.collect(Collectors.toCollection(TreeSet::new)));
+
+		ArrayList<Long> yset = new ArrayList<>(pts.stream()
+			.map(p -> p.y)
+			.collect(Collectors.toCollection(TreeSet::new)));
+
+		// System.out.println(xset);
+		// System.out.println(yset);
+
+		Map<Pt2D, Pt2D> compressed = new HashMap<>();
+		for (Pt2D p: pts) {
+			Long compx = (long) xset.indexOf(p.x);
+			Long compy = (long) yset.indexOf(p.y);
+			compressed.put(p, new Pt2D(compx, compy));
+		}
+		return compressed;
+	}
+
 
     public Long mySol(String input) {
-		ArrayList<Pt2D> perimeter = Arrays.stream(input.split("\n"))
+		ArrayList<Pt2D> points = Arrays.stream(input.split("\n"))
 			.map(i -> Arrays.stream(i.split(","))
 				.map(Long::parseLong)
 				.collect(Collectors.toCollection(ArrayList::new))
@@ -352,74 +320,63 @@ class Main {
 			.map(Pt2D::new)
 			.collect(Collectors.toCollection(ArrayList::new));
 
-		// filtrare dal perimetro solo i vertici (tra vertice e vertice ci possono essere altri punti)
-		List<Pt2D> vertices = IntStream.range(0, perimeter.size())
-			.filter(i -> perimeter.get(i).isVertix(perimeter, i))
-			.mapToObj(perimeter::get)
-			.collect(Collectors.toList());
+		// comprimere l'input
+		ArrayList<Pt2D> compressed_points = new ArrayList<>();
 
-		System.out.println("vertices: " + vertices.size());
+		// mappa per comprimere
+		Map<Pt2D, Pt2D> origTocomp = this.coordCompression(points);
+		// mappa per decomprimere
+		Map<Pt2D, Pt2D> compToorig = new HashMap<>();
+
+		for (Pt2D p: points) {
+			Pt2D compressed = origTocomp.get(p);
+			// estrarre solo i punti compressi (valori) dalla mappa
+			compressed_points.add(compressed);
+			compToorig.put(compressed, p);
+		}
 
 
-		// costruire il perimetro sotto forma di segmenti, tra vertice e vertice
+		// filtrare dal perimetro compresso solo i vertici (in caso tra vertice e vertice ci sono altri punti)
+		List<Pt2D> vertices = IntStream.range(0, compressed_points.size())
+		   	.filter(i -> compressed_points.get(i).isVertix(compressed_points, i))
+			.mapToObj(compressed_points::get)
+		   	.collect(Collectors.toList());
+
+		// System.out.println("vertices: " + vertices.size());
+
+
+		// costruire il perimetro compresso sotto forma di segmenti, tra vertice e vertice
 		ArrayList<Segment> sides = new ArrayList<>();
 		for (int i = 0; i < vertices.size(); i++) {
 			Segment s = new Segment(vertices.get(i), vertices.get((i+1) % vertices.size()));
 			sides.add(s);
 		}
-		System.out.println("sides: " + sides.size());
+		// System.out.println("sides: " + sides.size());
 
-        // perimetro lati orizzontali
-		ArrayList<Segment> horsides = sides.stream()
-			.filter(s -> !s.isVertical())
-			.collect(Collectors.toCollection(ArrayList::new));
-		horsides.sort((a, b) -> a.a.y.compareTo(b.b.y));
-		System.out.println("horsides: " + horsides.size());
-
-        // perimetro lati verticali 
-		ArrayList<Segment> versides = sides.stream()
-			.filter(Segment::isVertical)
-			.collect(Collectors.toCollection(ArrayList::new));
-		versides.sort((a, b) -> a.a.x.compareTo(b.b.x));
-		System.out.println("versides: " + versides.size());
-
-		// costruire tutti i rettangoli possibili
+		// costruire tutti i rettangoli (compressi) possibili
 		ArrayList<Rectangle> rectangles = new ArrayList<>();
-		for (int i = 0; i < perimeter.size(); i++) {
-		 	for (int j = i + 1; j < perimeter.size(); j++) {
-		 		rectangles.add(new Rectangle(perimeter.get(i), perimeter.get(j)));
+		for (int i = 0; i < compressed_points.size(); i++) {
+		 	for (int j = i + 1; j < compressed_points.size(); j++) {
+		 		rectangles.add(new Rectangle(compressed_points.get(i), compressed_points.get(j)));
 			}
 		}
 		System.out.println("rectangles: " + rectangles.size());
-		// rectangles.forEach(r -> r.sides().size());
-		// rectangles.forEach(r -> System.out.println(r.perimeter().size()));
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		// rectangles.forEach(System.out::println);
-		// rectangles.removeIf(r -> r.isInscribed(horsides, versides));
-		rectangles.removeIf(r -> r.isSegment() || !r.isInscribed(horsides, versides));
+		// rectangles.removeIf(r -> !r.isInscribed(horsides, versides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
+		// ordino (decrescente) i rettangoli per area (compressa)
+		rectangles.sort((a, b) -> b.area().compareTo(a.area()));
 		rectangles.forEach(System.out::println);
 
-		
-		System.out.println(":::::PROVA:::::");
-		// Rectangle prova = new Rectangle(new Pt2D(7l, 1l), new Pt2D(11l, 7l));
-		// Rectangle prova = new Rectangle(new Pt2D(2l, 3l), new Pt2D(9l, 5l));
-		// Rectangle prova = new Rectangle(new Pt2D(9l, 7l), new Pt2D(11l, 1l));
-		Rectangle prova = new Rectangle(new Pt2D(7l, 3l), new Pt2D(11l, 1l));
-		// Rectangle prova = new Rectangle(new Pt2D(1l, 0l), new Pt2D(4l, 4l));
-		System.out.println("is inscribed:" + prova.isInscribed(horsides, versides));
-		// Segment prova = new Segment(new Pt2D(7l, 3l), new Pt2D(11l, 3l));
-		// System.out.println("is inscribed:" + prova.isInscribed(horsides));
-		System.out.println(":::::::::::::::");
+		// prendo i vertici originali del rettangolo compresso più grande
+		// decomprimendo i vertici e ricalcolo il rettangolo (quindi l'area originale) con i vertici originali
+		Rectangle biggest = new Rectangle(
+				compToorig.get(rectangles.get(0).vertix1),
+				compToorig.get(rectangles.get(0).vertix2)
+		);
 
-		Long maxarea = 0l;
-
-		for (Rectangle r: rectangles) {
-			maxarea = maxarea.compareTo(r.area()) < 0? r.area(): maxarea;
-		}
-
-		return maxarea;
+		return biggest.area();
     }
 
     public static void main(String[] args) throws IOException {
@@ -430,6 +387,6 @@ class Main {
 
         System.out.printf("max area: %d\n\n", sol.mySol(example));
         // System.out.printf("max area: %d\n\n", sol.mySol(example2));
-        System.out.printf("max area: %d\n", sol.mySol(input));
+        // System.out.printf("max area: %d\n", sol.mySol(input));
     }
 }
