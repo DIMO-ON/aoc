@@ -305,9 +305,20 @@ class Main {
 		return compressed;
 	}
 
-	public void printArea(List<Pt2D> polygon, List<Pt2D> rectangle) {
-		Long width = (Long) polygon.stream().mapToLong(i -> i.x).max().getAsLong();
-		System.out.println(width);
+	public void printArea(List<Pt2D> polygon, Rectangle rectangle) {
+		Long width  = polygon.stream().mapToLong(i -> i.x).max().getAsLong();
+		Long height = polygon.stream().mapToLong(i -> i.y).max().getAsLong();
+		ArrayList<StringBuilder> area = new ArrayList<>();
+		for (int i = 0; i < width + 1; i++) {
+			area.add(new StringBuilder());
+			for (int j = 0; j < height + 1; j++) {
+				area.get(i).append(' ');
+			}
+		}
+		for (Pt2D p: polygon) {
+			area.get(p.y.intValue()).setCharAt(p.x.intValue(), '#');
+		}
+		area.forEach(System.out::println);
 	}
 
     public Long mySol(String input) {
@@ -368,6 +379,12 @@ class Main {
 		// ordino (decrescente) i rettangoli per area (compressa)
 		rectangles.sort((a, b) -> b.area().compareTo(a.area()));
 		// rectangles.forEach(System.out::println);
+
+		System.out.println("\n\n\n");
+
+		printArea(compressed_points, rectangles.get(0));
+
+		System.out.println("\n\n\n");
 
 
 		// prendo i vertici originali del rettangolo compresso più grande
