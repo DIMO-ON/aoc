@@ -151,13 +151,8 @@ class Main {
 		}
 		
 		public boolean isInscribed(ArrayList<Segment> polygon) {
-			// if (this.isSegment()) return false;
-			// return this.sides().stream()
 			return this.perimeter().stream()
 				.allMatch(p -> p.isInscribed(polygon));
-			// 		if (s.isVertical()) return s.isInscribed(versidespol);
-			// 		return s.isInscribed(horsidespol);
-			// 	});
 		}
 
 		public Long area() {
@@ -195,9 +190,9 @@ class Main {
 		public boolean rayCast(Pt2D p) {
 			if (this.isPoint()) return a.y.equals(p.y);
 			return this.isVertical() && 
-				this.a.x > p.x &&
-				this.a.y < p.y &&
-				this.b.y >= p.y;
+				this.a.x.compareTo(p.x) > 0 &&
+				this.a.y.compareTo(p.y) < 0 &&
+				this.b.y.compareTo(p.y) >= 0;
 		}
 
 
@@ -310,6 +305,10 @@ class Main {
 		return compressed;
 	}
 
+	public void printArea(List<Pt2D> polygon, List<Pt2D> rectangle) {
+		Long width = (Long) polygon.stream().mapToLong(i -> i.x).max().getAsLong();
+		System.out.println(width);
+	}
 
     public Long mySol(String input) {
 		ArrayList<Pt2D> points = Arrays.stream(input.split("\n"))
@@ -363,17 +362,19 @@ class Main {
 		System.out.println("rectangles: " + rectangles.size());
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		// rectangles.removeIf(r -> !r.isInscribed(horsides, versides));
+		rectangles.removeIf(r -> !r.isInscribed(sides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
+
 		// ordino (decrescente) i rettangoli per area (compressa)
 		rectangles.sort((a, b) -> b.area().compareTo(a.area()));
-		rectangles.forEach(System.out::println);
+		// rectangles.forEach(System.out::println);
+
 
 		// prendo i vertici originali del rettangolo compresso più grande
 		// decomprimendo i vertici e ricalcolo il rettangolo (quindi l'area originale) con i vertici originali
 		Rectangle biggest = new Rectangle(
-				compToorig.get(rectangles.get(0).vertix1),
-				compToorig.get(rectangles.get(0).vertix2)
+			compToorig.get(rectangles.get(0).vertix1),
+			compToorig.get(rectangles.get(0).vertix2)
 		);
 
 		return biggest.area();
