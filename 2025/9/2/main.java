@@ -72,8 +72,10 @@ class Main {
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
 		 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
 		 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
+			System.out.println(this + " is included " + isincluded);
 		 	if (isincluded) return true;
 		 	interceptions.removeIf(s -> !s.rayCast(this));
+			System.out.println(interceptions);
 		 	return (interceptions.size() % 2) > 0;
 		}
 
@@ -205,9 +207,9 @@ class Main {
 
         public boolean include(Pt2D p) {
 			if (this.isVertical()) 
-				return a.y.compareTo(p.y) <= 0 && b.y.compareTo(p.y) >= 0;
+				return a.x.equals(p.x) && a.y.compareTo(p.y) <= 0 && b.y.compareTo(p.y) >= 0;
 
-			return a.x.compareTo(p.x) <= 0 && b.x.compareTo(p.x) >= 0;
+			return b.y.equals(p.y) && a.x.compareTo(p.x) <= 0 && b.x.compareTo(p.x) >= 0;
 
 		}
 
@@ -384,7 +386,7 @@ class Main {
 		System.out.println("rectangles: " + rectangles.size());
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		// rectangles.removeIf(r -> !r.isInscribed(sides));
+		rectangles.removeIf(r -> !r.isInscribed(sides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
 
 		// ordino (decrescente) i rettangoli per area (compressa)
@@ -396,8 +398,13 @@ class Main {
 		// printArea(compressed_points, rectangles.get(0));
 		System.out.println(rectangles.get(0).perimeter());
 		printArea(compressed_points, new Rectangle(new Pt2D(0l, 0l), new Pt2D(0l,0l)));
-		Pt2D prova = new Pt2D(0l, 0l);
-
+		Pt2D v1 = new Pt2D(9l, 5l);
+		Pt2D v2 = new Pt2D(2l, 3l);
+		Pt2D v1c = origTocomp.get(v1);
+		Pt2D v2c = origTocomp.get(v2);
+		Rectangle prova = new Rectangle(v1c, v2c);
+		printArea(compressed_points, prova);
+		System.out.println(sides);	
 		System.out.println(prova.isInscribed(sides));	
 		System.out.println("\n");
 
