@@ -306,18 +306,28 @@ class Main {
 	}
 
 	public void printArea(List<Pt2D> polygon, Rectangle rectangle) {
-		Long width  = polygon.stream().mapToLong(i -> i.x).max().getAsLong();
-		Long height = polygon.stream().mapToLong(i -> i.y).max().getAsLong();
+		System.out.println("\n" + rectangle + "\n");
+		Long width  = polygon.stream().mapToLong(i -> i.x).max().getAsLong() + 2;
+		Long height = polygon.stream().mapToLong(i -> i.y).max().getAsLong() + 2;
 		ArrayList<StringBuilder> area = new ArrayList<>();
-		for (int i = 0; i < width + 1; i++) {
-			area.add(new StringBuilder());
-			for (int j = 0; j < height + 1; j++) {
-				area.get(i).append(' ');
+		for (int i = 0; i < width; i++) {
+			StringBuilder row = new StringBuilder();
+			for (int j = 0; j < height; j++) {
+				row.append('.');
 			}
+			area.add(row);
 		}
 		for (Pt2D p: polygon) {
-			area.get(p.y.intValue()).setCharAt(p.x.intValue(), '#');
+			area.get(p.y.intValue())
+				.setCharAt(p.x.intValue(), '#');
 		}
+
+		area.get(rectangle.vertix1.y.intValue())
+			.setCharAt(rectangle.vertix1.x.intValue(), 'O');
+
+		area.get(rectangle.vertix2.y.intValue())
+			.setCharAt(rectangle.vertix2.x.intValue(), 'O');
+
 		area.forEach(System.out::println);
 	}
 
@@ -361,7 +371,8 @@ class Main {
 			Segment s = new Segment(vertices.get(i), vertices.get((i+1) % vertices.size()));
 			sides.add(s);
 		}
-		// System.out.println("sides: " + sides.size());
+		System.out.println("sides: " + sides.size());
+		// System.out.println(sides);
 
 		// costruire tutti i rettangoli (compressi) possibili
 		ArrayList<Rectangle> rectangles = new ArrayList<>();
@@ -373,18 +384,22 @@ class Main {
 		System.out.println("rectangles: " + rectangles.size());
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		rectangles.removeIf(r -> !r.isInscribed(sides));
+		// rectangles.removeIf(r -> !r.isInscribed(sides));
 		System.out.println("inscribed rectangles: " + rectangles.size());
 
 		// ordino (decrescente) i rettangoli per area (compressa)
 		rectangles.sort((a, b) -> b.area().compareTo(a.area()));
 		// rectangles.forEach(System.out::println);
 
-		System.out.println("\n\n\n");
+		System.out.println("\n");
 
-		printArea(compressed_points, rectangles.get(0));
+		// printArea(compressed_points, rectangles.get(0));
+		System.out.println(rectangles.get(0).perimeter());
+		printArea(compressed_points, new Rectangle(new Pt2D(0l, 0l), new Pt2D(0l,0l)));
+		Pt2D prova = new Pt2D(0l, 0l);
 
-		System.out.println("\n\n\n");
+		System.out.println(prova.isInscribed(sides));	
+		System.out.println("\n");
 
 
 		// prendo i vertici originali del rettangolo compresso più grande
