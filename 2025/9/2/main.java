@@ -72,10 +72,10 @@ class Main {
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
 		 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
 		 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
-			System.out.println(this + " is included " + isincluded);
+			// System.out.println(this + " is included " + isincluded);
 		 	if (isincluded) return true;
 		 	interceptions.removeIf(s -> !s.rayCast(this));
-			System.out.println(interceptions);
+			// System.out.println(interceptions);
 		 	return (interceptions.size() % 2) > 0;
 		}
 
@@ -186,6 +186,23 @@ class Main {
 				this.b = a;
 			}
 			
+		}
+
+		public List<Pt2D> split(Long size) {
+			ArrayList<Pt2D> line = new ArrayList<>();
+			Pt2D cursor = new Pt2D(a);
+			Long xinc = this.isVertical()? 0l: size;
+			Long yinc = this.isVertical()? size: 0l;
+			line.add(cursor);
+
+			while (!cursor.equals(this.b)) {
+				// Pt2D tmp = new Pt2D(cursor.x += xinc);
+				cursor.y += yinc;
+				line.add(cursor);
+			}
+			line.add(b);
+			System.out.println(line);
+			return line;
 		}
 
 
@@ -308,9 +325,9 @@ class Main {
 	}
 
 	public void printArea(List<Pt2D> polygon, Rectangle rectangle) {
-		System.out.println("\n" + rectangle + "\n");
-		Long width  = polygon.stream().mapToLong(i -> i.x).max().getAsLong() + 2;
-		Long height = polygon.stream().mapToLong(i -> i.y).max().getAsLong() + 2;
+		// System.out.println("\n" + rectangle + "\n");
+		Long width  = polygon.stream().mapToLong(i -> i.x).max().getAsLong() + 3;
+		Long height = polygon.stream().mapToLong(i -> i.y).max().getAsLong() + 3;
 		ArrayList<StringBuilder> area = new ArrayList<>();
 		for (int i = 0; i < width; i++) {
 			StringBuilder row = new StringBuilder();
@@ -319,16 +336,17 @@ class Main {
 			}
 			area.add(row);
 		}
+
 		for (Pt2D p: polygon) {
 			area.get(p.y.intValue())
 				.setCharAt(p.x.intValue(), '#');
 		}
 
-		area.get(rectangle.vertix1.y.intValue())
-			.setCharAt(rectangle.vertix1.x.intValue(), 'O');
+		// area.get(rectangle.vertix1.y.intValue())
+		// 	.setCharAt(rectangle.vertix1.x.intValue(), 'O');
 
-		area.get(rectangle.vertix2.y.intValue())
-			.setCharAt(rectangle.vertix2.x.intValue(), 'O');
+		// area.get(rectangle.vertix2.y.intValue())
+		// 	.setCharAt(rectangle.vertix2.x.intValue(), 'O');
 
 		area.forEach(System.out::println);
 	}
@@ -365,6 +383,7 @@ class Main {
 		   	.collect(Collectors.toList());
 
 		// System.out.println("vertices: " + vertices.size());
+		// printArea(compressed_points, null);
 
 
 		// costruire il perimetro compresso sotto forma di segmenti, tra vertice e vertice
@@ -374,6 +393,7 @@ class Main {
 			sides.add(s);
 		}
 		System.out.println("sides: " + sides.size());
+		System.exit(0);
 		// System.out.println(sides);
 
 		// costruire tutti i rettangoli (compressi) possibili
@@ -390,33 +410,50 @@ class Main {
 		System.out.println("inscribed rectangles: " + rectangles.size());
 
 		// ordino (decrescente) i rettangoli per area (compressa)
-		rectangles.sort((a, b) -> b.area().compareTo(a.area()));
+		// rectangles.sort((a, b) -> b.area().compareTo(a.area()));
 		// rectangles.forEach(System.out::println);
 
 		System.out.println("\n");
 
-		// printArea(compressed_points, rectangles.get(0));
-		System.out.println(rectangles.get(0).perimeter());
-		printArea(compressed_points, new Rectangle(new Pt2D(0l, 0l), new Pt2D(0l,0l)));
-		Pt2D v1 = new Pt2D(9l, 5l);
-		Pt2D v2 = new Pt2D(2l, 3l);
-		Pt2D v1c = origTocomp.get(v1);
-		Pt2D v2c = origTocomp.get(v2);
-		Rectangle prova = new Rectangle(v1c, v2c);
-		printArea(compressed_points, prova);
-		System.out.println(sides);	
-		System.out.println(prova.isInscribed(sides));	
-		System.out.println("\n");
+		printArea(compressed_points, rectangles.get(0));
+		// System.out.println(rectangles.get(0).perimeter());
+		// printArea(compressed_points, new Rectangle(new Pt2D(0l, 0l), new Pt2D(0l,0l)));
+		// Pt2D v1 = new Pt2D(9l, 5l);
+		// Pt2D v2 = new Pt2D(2l, 3l);
+		// Pt2D v1c = origTocomp.get(v1);
+		// Pt2D v2c = origTocomp.get(v2);
+		// Rectangle prova = new Rectangle(v1c, v2c);
+		// printArea(compressed_points, prova);
+		// System.out.println(sides);	
+		// System.out.println(prova.isInscribed(sides));	
+		// System.out.println("\n");
 
 
 		// prendo i vertici originali del rettangolo compresso più grande
 		// decomprimendo i vertici e ricalcolo il rettangolo (quindi l'area originale) con i vertici originali
-		Rectangle biggest = new Rectangle(
-			compToorig.get(rectangles.get(0).vertix1),
-			compToorig.get(rectangles.get(0).vertix2)
-		);
+		Long maxarea = 0l;
+		Rectangle biggest = rectangles.get(0);
+		Rectangle biggestcompressed = rectangles.get(0);
+		for (Rectangle r: rectangles) {
+			Rectangle decompressed = new Rectangle(
+				compToorig.get(r.vertix1),
+				compToorig.get(r.vertix2)
+			);
 
-		return biggest.area();
+			// maxarea = maxarea.compareTo(decompressed.area()) >= 0? maxarea: decompressed.area();
+			if (maxarea.compareTo(decompressed.area()) < 0) {
+				maxarea = decompressed.area();
+				biggestcompressed = r;
+				biggest = decompressed;
+			}
+		}
+
+		// {x=217, y=122}
+		System.out.println(biggest);
+		// printArea(compressed_points, new Rectangle(new Pt2D(216l,122l), new Pt2D(216l, 122l)));
+		// printArea(sides, biggestcompressed);
+		// printArea(sides);
+		return maxarea;
     }
 
     public static void main(String[] args) throws IOException {
@@ -425,8 +462,8 @@ class Main {
 		String example = Files.readString(Path.of("2025/9/example.txt"));
 		// String example2 = Files.readString(Path.of("2025/9/example2.txt"));
 
-        System.out.printf("max area: %d\n\n", sol.mySol(example));
+        // System.out.printf("max area: %d\n\n", sol.mySol(example));
         // System.out.printf("max area: %d\n\n", sol.mySol(example2));
-        // System.out.printf("max area: %d\n", sol.mySol(input));
+        System.out.printf("max area: %d\n", sol.mySol(input));
     }
 }
