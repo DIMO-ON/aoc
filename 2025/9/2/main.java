@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 class Main {
-	private class Pt2D implements Comparable<Pt2D> {
+	private static class Pt2D implements Comparable<Pt2D> {
 		public Long x, y;
 
 		@Override
@@ -324,11 +324,11 @@ class Main {
 		return compressed;
 	}
 
-	public void printArea(List<Pt2D> polygon, Rectangle rectangle) {
+	public void printArea(List<Pt2D> polygon, List<Pt2D> rectangle) {
 		// System.out.println("\n" + rectangle + "\n");
 		Long width  = polygon.stream().mapToLong(i -> i.x).max().getAsLong() + 3;
 		Long height = polygon.stream().mapToLong(i -> i.y).max().getAsLong() + 3;
-		ArrayList<StringBuilder> area = new ArrayList<>();
+		List<StringBuilder> area = new ArrayList<>();
 		for (int i = 0; i < width; i++) {
 			StringBuilder row = new StringBuilder();
 			for (int j = 0; j < height; j++) {
@@ -342,15 +342,43 @@ class Main {
 				.setCharAt(p.x.intValue(), '#');
 		}
 
-		// area.get(rectangle.vertix1.y.intValue())
-		// 	.setCharAt(rectangle.vertix1.x.intValue(), 'O');
+		if (rectangle != null) {
+			for (Pt2D p: rectangle) {
+				area.get(p.y.intValue())
+					.setCharAt(p.x.intValue(), '@');
+			}
+		}
 
-		// area.get(rectangle.vertix2.y.intValue())
-		// 	.setCharAt(rectangle.vertix2.x.intValue(), 'O');
 
 		area.forEach(System.out::println);
 	}
 
+	public static List<Pt2D> perimeter(List<Pt2D> compressed_points) {
+		// System.out.println(compressed_points);
+		// return null;
+		ArrayList<Pt2D> compressed_perimeter_points = new ArrayList<>();
+		for (int i = 0; i < compressed_points.size(); i++) {
+			Pt2D a = compressed_points.get(i);
+			Pt2D b = compressed_points.get((i+1) % compressed_points.size());
+			Pt2D c = new Pt2D(a);
+
+			int xinc = a.y.equals(b.y)? (a.x.compareTo(b.x) <= 0? 1: -1): 0;
+			int yinc = a.x.equals(b.x)? (a.y.compareTo(b.y) <= 0? 1: -1): 0;
+			// System.out.println(xinc + " " + yinc);
+			// break;
+
+			while (!c.equals(b)) {
+				compressed_perimeter_points.add(new Pt2D(c));
+				c.x += xinc;
+				c.y += yinc;
+				// break;
+			}
+
+		}
+
+		return compressed_perimeter_points;
+	}
+			// break;
     public Long mySol(String input) {
 		ArrayList<Pt2D> points = Arrays.stream(input.split("\n"))
 			.map(i -> Arrays.stream(i.split(","))
@@ -386,28 +414,40 @@ class Main {
 		// printArea(compressed_points, null);
 
 
-		// costruire il perimetro compresso sotto forma di segmenti, tra vertice e vertice
-		ArrayList<Segment> sides = new ArrayList<>();
-		for (int i = 0; i < vertices.size(); i++) {
-			Segment s = new Segment(vertices.get(i), vertices.get((i+1) % vertices.size()));
-			sides.add(s);
-		}
-		System.out.println("sides: " + sides.size());
-		System.exit(0);
+		// costruire il perimetro compresso sotto forma di punti
+		List<Pt2D> compressed_perimeter_points = perimeter(compressed_points);
+
+		// System.out.println("sides: " + compressed_perimeter_points.size());
+		// printArea(compressed_perimeter_points, null);
 		// System.out.println(sides);
 
-		// costruire tutti i rettangoli (compressi) possibili
-		ArrayList<Rectangle> rectangles = new ArrayList<>();
+		// accumulare i vertici (compressi) per formare tutti possibili rettangoli
+		ArrayList<List<Pt2D>> rectvertices = new ArrayList<>();
 		for (int i = 0; i < compressed_points.size(); i++) {
 		 	for (int j = i + 1; j < compressed_points.size(); j++) {
-		 		rectangles.add(new Rectangle(compressed_points.get(i), compressed_points.get(j)));
+				Pt2D v1 = compressed_points.get(i);
+				Pt2D v3 = compressed_points.get(j % compressed_points.size());
+				Pt2D v2 = new Pt2D(v1.x, v3.y);
+				Pt2D v4 = new Pt2D(v3.x, v1.y);
+		 		rectvertices.add(List.of(v1,v2,v3,v4));
 			}
 		}
-		System.out.println("rectangles: " + rectangles.size());
+		// System.out.println("rectvertices: " + rectangles.size());
+		// printArea(compressed_perimeter_points, rectvertices.get(0));
+
+
+		// costruire tutti i perimetri di tutti i rettangoli possibili sotto forma di pt2d
+		List<List<Pt2D>> rectperimeters = rectvertices.stream().map(l -> perimeter(l)).collect(Collectors.toList());
+		rectperimeters.sort((a,b) -> b.size() - a.size());
+		// printArea(compressed_perimeter_points, rectperimeters.get(0));
+
+		// TODO: verificare tramite ray casting ogni punto del perimetro che sia interno al compressed_perimeter_points
+		System.exit(0);
+
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
-		rectangles.removeIf(r -> !r.isInscribed(sides));
-		System.out.println("inscribed rectangles: " + rectangles.size());
+		// rectangles.removeIf(r -> !r.isInscribed(sides));
+		// System.out.println("inscribed rectangles: " + rectangles.size());
 
 		// ordino (decrescente) i rettangoli per area (compressa)
 		// rectangles.sort((a, b) -> b.area().compareTo(a.area()));
@@ -415,7 +455,7 @@ class Main {
 
 		System.out.println("\n");
 
-		printArea(compressed_points, rectangles.get(0));
+		// printArea(compressed_points, rectangles.get(0));
 		// System.out.println(rectangles.get(0).perimeter());
 		// printArea(compressed_points, new Rectangle(new Pt2D(0l, 0l), new Pt2D(0l,0l)));
 		// Pt2D v1 = new Pt2D(9l, 5l);
@@ -432,24 +472,24 @@ class Main {
 		// prendo i vertici originali del rettangolo compresso più grande
 		// decomprimendo i vertici e ricalcolo il rettangolo (quindi l'area originale) con i vertici originali
 		Long maxarea = 0l;
-		Rectangle biggest = rectangles.get(0);
-		Rectangle biggestcompressed = rectangles.get(0);
-		for (Rectangle r: rectangles) {
-			Rectangle decompressed = new Rectangle(
-				compToorig.get(r.vertix1),
-				compToorig.get(r.vertix2)
-			);
+		// Rectangle biggest = rectangles.get(0);
+		// Rectangle biggestcompressed = rectangles.get(0);
+		// for (Rectangle r: rectangles) {
+		// 	Rectangle decompressed = new Rectangle(
+		// 		compToorig.get(r.vertix1),
+		// 		compToorig.get(r.vertix2)
+		// 	);
 
-			// maxarea = maxarea.compareTo(decompressed.area()) >= 0? maxarea: decompressed.area();
-			if (maxarea.compareTo(decompressed.area()) < 0) {
-				maxarea = decompressed.area();
-				biggestcompressed = r;
-				biggest = decompressed;
-			}
-		}
+		// 	// maxarea = maxarea.compareTo(decompressed.area()) >= 0? maxarea: decompressed.area();
+		// 	if (maxarea.compareTo(decompressed.area()) < 0) {
+		// 		maxarea = decompressed.area();
+		// 		biggestcompressed = r;
+		// 		biggest = decompressed;
+		// 	}
+		// }
 
 		// {x=217, y=122}
-		System.out.println(biggest);
+		// System.out.println(biggest);
 		// printArea(compressed_points, new Rectangle(new Pt2D(216l,122l), new Pt2D(216l, 122l)));
 		// printArea(sides, biggestcompressed);
 		// printArea(sides);
