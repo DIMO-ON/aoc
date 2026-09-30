@@ -69,6 +69,8 @@ class Main {
 			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y) + 1;
 		}
 
+		public boolean rayCast(ArrayList<Pt2D> polygonperimeter) {}
+
 		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
 		 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
 		 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
@@ -378,7 +380,14 @@ class Main {
 
 		return compressed_perimeter_points;
 	}
-			// break;
+
+	public static floodfill(List<Pt2D> polygonperimeter) {
+		// TODO: crea la griglia sotto forma di matrice booleana, segna anche i punti del polygono
+		// TODO: cerca e seleziona a priori il primo punto esterno che sicuramente si trova sul bordo
+		// TODO: floodfill negativo dell'area esterna e ritorna quest'area
+		// per fare flood fill interno in modo dinamico bisogna comunque trovare prima l'area esterna, oppure fare ray casting ma non sembra funzionare
+	}
+
     public Long mySol(String input) {
 		ArrayList<Pt2D> points = Arrays.stream(input.split("\n"))
 			.map(i -> Arrays.stream(i.split(","))
@@ -441,7 +450,9 @@ class Main {
 		rectperimeters.sort((a,b) -> b.size() - a.size());
 		// printArea(compressed_perimeter_points, rectperimeters.get(0));
 
-		// TODO: verificare tramite ray casting ogni punto del perimetro che sia interno al compressed_perimeter_points
+		// TODO: floodfill area esterna poligono
+		ArrayList<Pt2D> extarea = floodfill(compressed_perimeter_points);
+		// TODO: per ogni punti dell'extarea verifica se ci sono rettangoli i cui punti del perimetro contengono tale punto ed eliminalo dalla coda
 		System.exit(0);
 
 		// rectangles.forEach(r -> r.perimeter());
