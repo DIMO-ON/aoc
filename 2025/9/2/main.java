@@ -58,20 +58,29 @@ class Main {
 		}
 
 		public boolean rayCast(ArrayList<Pt2D> polygonperimeter) {
+			// true se dentro, flase se fuori
 			int count = 0;
 			int size  = polygonperimeter.size();
 			for (int i = 0; i < size; i++) {
 				Pt2D p = polygonperimeter.get(i);
-				Pt2D prev = polygonperimeter.get((i-1) % size);
+				int previdx = (i - 1) % size;
+				if (previdx < 0)
+				{
+					previdx += size;
+				}
+				Pt2D prev = polygonperimeter.get(previdx);
 				Pt2D next = polygonperimeter.get((i+1) % size);
 				if (p == this) return true;
 				if (p.y.equals(this.y) && p.x.compareTo(this.x) > 0) {
-					// in pratica prev.y >= p.y > next.y;
-					if (prev.y.compareTo(p.y) >= 0 && p.y.compareTo(next.y) > 0) count += 1;
+					if (prev.y.compareTo(p.y) <= 0 && p.y.compareTo(next.y) < 0) {
+						count += 1;
+				    }
 				}
 			}
 
-			return (count % 1) == 1;
+			// System.out.println(count);
+
+			return (count % 2) == 1;
 		}
 
 		@Override
@@ -131,7 +140,7 @@ class Main {
 		area.forEach(System.out::println);
 	}
 
-	public static List<Pt2D> perimeter(List<Pt2D> compressed_points) {
+	public static ArrayList<Pt2D> perimeter(List<Pt2D> compressed_points) {
 		// System.out.println(compressed_points);
 		// return null;
 		ArrayList<Pt2D> compressed_perimeter_points = new ArrayList<>();
@@ -187,13 +196,15 @@ class Main {
 
 
 		// costruire il perimetro compresso sotto forma di punti
-		List<Pt2D> compressed_perimeter_points = perimeter(compressed_points);
+		ArrayList<Pt2D> compressed_perimeter_points = perimeter(compressed_points);
 
 		// System.out.println("sides: " + compressed_perimeter_points.size());
-		// printArea(compressed_perimeter_points, null);
-		// System.out.println(sides);
+		Pt2D prova = new Pt2D(1l, 2l);
+		printArea(compressed_perimeter_points, List.of(prova));
+		System.out.println(prova.rayCast(compressed_perimeter_points));
 
 		// accumulare i vertici (compressi) per formare tutti possibili rettangoli
+		// TODO: mappare ad ogni coppia di punti orig l'area rispetto al perimetro compresso
 		ArrayList<List<Pt2D>> rectvertices = new ArrayList<>();
 		for (int i = 0; i < compressed_points.size(); i++) {
 		 	for (int j = i + 1; j < compressed_points.size(); j++) {
@@ -213,9 +224,6 @@ class Main {
 		rectperimeters.sort((a,b) -> b.size() - a.size());
 		// printArea(compressed_perimeter_points, rectperimeters.get(0));
 
-		// TODO: floodfill area esterna poligono
-		// TODO: per ogni punti dell'extarea verifica se ci sono rettangoli i cui punti del perimetro contengono tale punto ed eliminalo dalla coda
-		System.exit(0);
 
 		// rectangles.forEach(r -> r.perimeter());
 		// filtrare i rettangoli che non sono dentro il perimetro
@@ -275,8 +283,8 @@ class Main {
 		String example = Files.readString(Path.of("2025/9/example.txt"));
 		// String example2 = Files.readString(Path.of("2025/9/example2.txt"));
 
-        // System.out.printf("max area: %d\n\n", sol.mySol(example));
+        System.out.printf("max area: %d\n\n", sol.mySol(example));
         // System.out.printf("max area: %d\n\n", sol.mySol(example2));
-        System.out.printf("max area: %d\n", sol.mySol(input));
+        // System.out.printf("max area: %d\n", sol.mySol(input));
     }
 }
