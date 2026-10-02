@@ -57,28 +57,21 @@ class Main {
 			this.y = l.get(1);
 		}
 
-		public boolean isVertix(ArrayList<Pt2D> perimeter, int i) {
-			Pt2D prev = perimeter.get(Math.floorMod(i - 1, perimeter.size()));
-			Pt2D next = perimeter.get((i + 1) % perimeter.size());
+		public boolean rayCast(ArrayList<Pt2D> polygonperimeter) {
+			int count = 0;
+			int size  = polygonperimeter.size();
+			for (int i = 0; i < size; i++) {
+				Pt2D p = polygonperimeter.get(i);
+				Pt2D prev = polygonperimeter.get((i-1) % size);
+				Pt2D next = polygonperimeter.get((i+1) % size);
+				if (p == this) return true;
+				if (p.y.equals(this.y) && p.x.compareTo(this.x) > 0) {
+					// in pratica prev.y >= p.y > next.y;
+					if (prev.y.compareTo(p.y) >= 0 && p.y.compareTo(next.y) > 0) count += 1;
+				}
+			}
 
-			return prev.y.equals(this.y) && !next.y.equals(this.y) ||
-				   !prev.y.equals(this.y) && next.y.equals(this.y); 
-		}
-
-		public Long manhattanDistance(Pt2D other) {
-			return Math.abs(this.x - other.x) + Math.abs(this.y - other.y) + 1;
-		}
-
-		public boolean rayCast(ArrayList<Pt2D> polygonperimeter) {}
-
-		public boolean isInscribed(ArrayList<Segment> souterperimeter) {
-		 	ArrayList<Segment> interceptions = new ArrayList<>(souterperimeter);
-		 	boolean isincluded = interceptions.stream().anyMatch(s -> s.include(this));
-			// System.out.println(this + " is included " + isincluded);
-		 	if (isincluded) return true;
-		 	interceptions.removeIf(s -> !s.rayCast(this));
-			// System.out.println(interceptions);
-		 	return (interceptions.size() % 2) > 0;
+			return (count % 1) == 1;
 		}
 
 		@Override
@@ -87,223 +80,6 @@ class Main {
 		}
 	}
 
-	private class Rectangle {
-		public Pt2D vertix1;
-		public Pt2D vertix2;
-
-		public Rectangle(Pt2D v1, Pt2D v2) {
-			this.vertix1 = v1.compareTo(v2) <= 0? v1: v2;
-			this.vertix2 = v2.compareTo(v1) <= 0? v1: v2;
-		}
-
-		public boolean isSegment() {
-			return vertix1.x.compareTo(vertix2.x) == 0 ||
-				   vertix1.y.compareTo(vertix2.y) == 0;
-		}
-
-		public ArrayList<Segment> sides() {
-			ArrayList<Segment> sides = new ArrayList<>();
-			ArrayList<Pt2D> vertices = this.vertices();
-			for (int i = 0; i < vertices.size(); i++) {
-				Segment side = new Segment(vertices.get(i), vertices.get((i + 1) % vertices.size()));
-				sides.add(side);
-			}
-			return sides;
-		}
-		
-		public ArrayList<Pt2D> perimeter() {
-			Pt2D cursor1 = new Pt2D(vertix1);
-			Pt2D cursor2 = new Pt2D(vertix2);
-			HashSet<Pt2D> perimeter = new HashSet<>();
-			while (true) {
-				if (cursor1.equals(vertix2) && cursor2.equals(vertix1)) break;
-				perimeter.add(new Pt2D(cursor1));
-				perimeter.add(new Pt2D(cursor2));
-
-				if (!cursor1.x.equals(vertix2.x)) {
-					cursor1.x += cursor1.x < vertix2.x? 1: -1;
-				} else if (!cursor1.y.equals(vertix2.y)) {
-					cursor1.y += cursor1.y < vertix2.y? 1: -1;
-				}
-
-				if (!cursor2.x.equals(vertix1.x)) {
-					cursor2.x += cursor2.x < vertix1.x? 1: -1;
-				} else if (!cursor2.y.equals(vertix1.y)) {
-					cursor2.y += cursor2.y < vertix1.y? 1: -1;
-				}
-			}
-
-			// System.out.println(perimeter);
-
-			return new ArrayList<>(perimeter);
-		}
-
-		public ArrayList<Pt2D> vertices() {
-			if (this.isSegment()) {
-				return new ArrayList<Pt2D>(Arrays.asList( 
-					vertix1,
-					vertix2	
-					));
-			}
-
-			return new ArrayList<Pt2D>(Arrays.asList( 
-				vertix1,
-				new Pt2D(vertix2.x, vertix1.y),
-				vertix2,
-				new Pt2D(vertix1.x, vertix2.y)
-				));
-		}
-		
-		public boolean isInscribed(ArrayList<Segment> polygon) {
-			return this.perimeter().stream()
-				.allMatch(p -> p.isInscribed(polygon));
-		}
-
-		public Long area() {
-			if (this.isSegment()) return this.vertix1.manhattanDistance(this.vertix2);
-			return (Math.abs(this.vertix1.x - this.vertix2.x) + 1) *
-				   (Math.abs(this.vertix1.y - this.vertix2.y) + 1);
-		}
-
-		@Override
-		public String toString() {
-			return "[vertix1 = "   + vertix1.toString() + " " +
-				   "vertix2 = " + vertix2.toString() +
-				   "] - area: " + this.area();
-		}
-	}
-
-
-	private class Segment implements Comparable<Segment> {
-		public Pt2D a, b;
-
-		public Segment(Pt2D a, Pt2D b) {
-			// assert !a.equals(b): a.toString() + " " + b.toString() + " is point, not segment";
-	        // Order by x, then by y to have deterministic endpoints
-			if (a.x < b.x || (a.x == b.x && a.y <= b.y)) {
-				this.a = a;
-				this.b = b;
-			} else {
-				this.a = b;
-				this.b = a;
-			}
-			
-		}
-
-		public List<Pt2D> split(Long size) {
-			ArrayList<Pt2D> line = new ArrayList<>();
-			Pt2D cursor = new Pt2D(a);
-			Long xinc = this.isVertical()? 0l: size;
-			Long yinc = this.isVertical()? size: 0l;
-			line.add(cursor);
-
-			while (!cursor.equals(this.b)) {
-				// Pt2D tmp = new Pt2D(cursor.x += xinc);
-				cursor.y += yinc;
-				line.add(cursor);
-			}
-			line.add(b);
-			System.out.println(line);
-			return line;
-		}
-
-
-		public boolean rayCast(Pt2D p) {
-			if (this.isPoint()) return a.y.equals(p.y);
-			return this.isVertical() && 
-				this.a.x.compareTo(p.x) > 0 &&
-				this.a.y.compareTo(p.y) < 0 &&
-				this.b.y.compareTo(p.y) >= 0;
-		}
-
-
-		public boolean isConsecutiveTo(Segment o) {
-            if (this.isVertical() != o.isVertical()) return false;
-			if (this.isVertical())
-				return this.a.y.equals(o.b.y) || this.b.y.equals(o.a.y);
-			return this.a.x.equals(o.b.x) || this.b.x.equals(o.a.x);
-		}
-
-        public boolean include(Pt2D p) {
-			if (this.isVertical()) 
-				return a.x.equals(p.x) && a.y.compareTo(p.y) <= 0 && b.y.compareTo(p.y) >= 0;
-
-			return b.y.equals(p.y) && a.x.compareTo(p.x) <= 0 && b.x.compareTo(p.x) >= 0;
-
-		}
-
-        public boolean include(Segment o) {
-            if (this.equals(o)) return true;
-            if (this.isVertical() != o.isVertical()) return false;
-            if (!this.a.equals(o.a.x) && !this.a.y.equals(o.a.y)) return false;
-            if (!this.isVertical())
-                return this.a.y.equals(o.a.y) && 
-                       this.a.x.compareTo(o.a.x) <= 0 &&
-                       this.b.x.compareTo(o.b.x) >= 0;
-            return this.a.x.equals(o.a.x) && 
-                   this.a.y.compareTo(o.a.y) <= 0 &&
-                   this.b.y.compareTo(o.b.y) >= 0;
-        }
-
-		public boolean isAfter(Segment o) {
-			if (this.isVertical() != o.isVertical()) return false;
-			if (this.isVertical()) return this.a.x.compareTo(o.a.x) >= 0;
-			return this.a.y.compareTo(o.a.y) >= 0;
-		}
-
-		public boolean isPoint() {
-			return a.equals(b);
-		}
-		
-
-		public boolean equals(Segment o) {
-			return this.a.equals(o.a) && this.b.equals(o.b);
-		}
-
-
-		public boolean isAligned() {
-			return a.x.equals(b.x) || a.y.equals(b.y);
-		}
-
-		public Segment cutInterception(Segment o) {
-			// assert this.isVertical() != o.isVertical(): this + " " + o + "are not parallel";
-			
-			if (this.isVertical()) {
-				return new Segment(
-						this.a.compareTo(o.a) >= 0? this.a: new Pt2D(this.a.x, o.a.y),
-						this.b.compareTo(o.b) <= 0? this.b: new Pt2D(this.b.x, o.b.y)
-						);
-			}
-			return new Segment(
-					this.a.compareTo(o.a) >= 0? this.a: new Pt2D(o.a.x, this.a.y),
-					this.b.compareTo(o.b) <= 0? this.b: new Pt2D(o.b.x, this.b.y)
-					);
-		}
-
-		public boolean intercept(Segment o) {
-			if (o.isVertical() != this.isVertical()) return false;
-			if (this.isVertical()) {
-			    return !(o.a.y.compareTo(this.b.y) >= 0 || o.b.y.compareTo(this.a.y) <= 0);
-			}
-            return !(o.a.x.compareTo(this.b.x) >= 0 || o.b.x.compareTo(this.a.x) <= 0);
-		}
-
-		@Override
-		public int compareTo(Segment o) {
-			if (this.equals(o)) return 0;
-			return -1;
-		}
-
-		public boolean isVertical() {
-			return a.x.equals(b.x);
-		}
-
-		@Override
-		public String toString() {
-			return "a = " + a.toString() + " " +
-				   "b = " + b.toString();
-		}
-	}
 
 	public Map<Pt2D, Pt2D> coordCompression(ArrayList<Pt2D> pts) {
 		ArrayList<Long> xset = new ArrayList<>(pts.stream()
@@ -381,13 +157,6 @@ class Main {
 		return compressed_perimeter_points;
 	}
 
-	public static floodfill(List<Pt2D> polygonperimeter) {
-		// TODO: crea la griglia sotto forma di matrice booleana, segna anche i punti del polygono
-		// TODO: cerca e seleziona a priori il primo punto esterno che sicuramente si trova sul bordo
-		// TODO: floodfill negativo dell'area esterna e ritorna quest'area
-		// per fare flood fill interno in modo dinamico bisogna comunque trovare prima l'area esterna, oppure fare ray casting ma non sembra funzionare
-	}
-
     public Long mySol(String input) {
 		ArrayList<Pt2D> points = Arrays.stream(input.split("\n"))
 			.map(i -> Arrays.stream(i.split(","))
@@ -412,12 +181,6 @@ class Main {
 			compToorig.put(compressed, p);
 		}
 
-
-		// filtrare dal perimetro compresso solo i vertici (in caso tra vertice e vertice ci sono altri punti)
-		List<Pt2D> vertices = IntStream.range(0, compressed_points.size())
-		   	.filter(i -> compressed_points.get(i).isVertix(compressed_points, i))
-			.mapToObj(compressed_points::get)
-		   	.collect(Collectors.toList());
 
 		// System.out.println("vertices: " + vertices.size());
 		// printArea(compressed_points, null);
@@ -451,7 +214,6 @@ class Main {
 		// printArea(compressed_perimeter_points, rectperimeters.get(0));
 
 		// TODO: floodfill area esterna poligono
-		ArrayList<Pt2D> extarea = floodfill(compressed_perimeter_points);
 		// TODO: per ogni punti dell'extarea verifica se ci sono rettangoli i cui punti del perimetro contengono tale punto ed eliminalo dalla coda
 		System.exit(0);
 
